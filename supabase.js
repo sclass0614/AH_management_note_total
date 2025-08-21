@@ -12,7 +12,7 @@ function initSupabase() {
     console.log("🔄 Supabase 클라이언트를 재사용합니다.");
     return supabaseClient;
   }
-  
+
   // Supabase 라이브러리가 로드되었는지 확인
   if (typeof supabase !== 'undefined') {
     try {
@@ -20,6 +20,11 @@ function initSupabase() {
       console.log("✅ Supabase 클라이언트가 새로 생성되었습니다.");
       console.log("URL:", SUPABASE_URL);
       console.log("API Key:", SUPABASE_KEY.substring(0, 20) + "...");
+      
+      // 전역 변수로 설정
+      window.supabaseClient = supabaseClient;
+      window.supabase = supabaseClient; // authCheck.js 호환성을 위해 추가
+      
       return supabaseClient;
     } catch (error) {
       console.error("❌ Supabase 클라이언트 생성 실패:", error);
@@ -38,10 +43,26 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (supabaseClient) {
     console.log("✅ Supabase 클라이언트 초기화 완료");
+    console.log("window.supabase 설정됨:", !!window.supabase);
+    console.log("window.supabaseClient 설정됨:", !!window.supabaseClient);
+    
+    // initialize 함수가 있다면 호출
+    if (typeof initialize === 'function') {
+      initialize();
+    }
   } else {
     console.error("❌ Supabase 클라이언트 초기화 실패");
   }
 });
+
+// 스크립트 로드 즉시 초기화 시도 (authCheck.js가 먼저 로드될 경우 대비)
+console.log("Supabase 스크립트 로드됨 - 즉시 초기화 시도");
+if (typeof supabase !== 'undefined') {
+  console.log("Supabase 라이브러리 감지됨 - 즉시 클라이언트 생성");
+  supabaseClient = initSupabase();
+} else {
+  console.log("Supabase 라이브러리 아직 로드되지 않음 - DOM 로드 대기");
+}
 
 // 직원 정보를 가져오는 함수
 async function getEmployeesInfo() {
