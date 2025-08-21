@@ -841,14 +841,21 @@ function closeConflictModal() {
 
 // 입력 폼 초기화
 function clearForm() {
-    employeeNumberInput.value = '';
-    employeeNameInput.value = '';
+    // 직원번호와 직원명은 유지 (초기화하지 않음)
+    // employeeNumberInput.value = '';
+    // employeeNameInput.value = '';
+    
+    // 카테고리와 내용만 초기화
     categorySelect.value = '';
     contentTextarea.value = '';
+    
     // 원본 데이터 초기화
     originalData = null;
+    
     // textarea 높이 초기화
     contentTextarea.style.height = 'auto';
+    
+    console.log('입력 폼 초기화 완료 - 직원번호와 직원명은 유지됨');
 }
 
 
