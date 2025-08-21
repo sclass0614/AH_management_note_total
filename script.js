@@ -195,9 +195,16 @@ async function loadReportData() {
         console.log('activities_journal 데이터:', attendanceData);
         
         // membersinfo 데이터 로드 (전체 회원 정보)
+        console.log('=== membersinfo 데이터 로드 시작 ===');
+        console.log('조회할 날짜:', currentDate);
+        
         const { data: membersData, error: membersError } = await supabase
             .from('membersinfo')
             .select('회원번호, 회원명, 입소일, 퇴소일');
+        
+        console.log('membersinfo 쿼리 결과:');
+        console.log('- data:', membersData);
+        console.log('- error:', membersError);
         
         if (membersError) {
             console.error('membersinfo 로드 에러:', membersError);
@@ -206,6 +213,14 @@ async function loadReportData() {
         
         membersInfoData = membersData || [];
         console.log('membersinfo 데이터:', membersInfoData);
+        console.log('전체 회원 수:', membersInfoData.length);
+        
+        if (membersInfoData.length > 0) {
+            console.log('첫 번째 회원 데이터:', membersInfoData[0]);
+            console.log('회원 데이터 컬럼명:', Object.keys(membersInfoData[0]));
+        }
+        
+        console.log('=== membersinfo 데이터 로드 완료 ===');
         
         // UI 업데이트
         updateReportUI();
@@ -246,23 +261,40 @@ function updateReportUI() {
 
 // 회원 운영현황 업데이트
 function updateMemberStatus() {
+    console.log('=== 회원 운영현황 업데이트 시작 ===');
+    console.log('현재 날짜:', currentDate);
+    console.log('전체 회원 데이터:', membersInfoData);
+    
     // 현재 날짜 기준으로 입소 중인 회원 필터링
     const currentMembers = membersInfoData.filter(member => {
         const 입소일 = member.입소일 || '';
         const 퇴소일 = member.퇴소일 || '';
         
+        console.log(`회원 ${member.회원명} (${member.회원번호}):`);
+        console.log(`- 입소일: "${입소일}"`);
+        console.log(`- 퇴소일: "${퇴소일}"`);
+        console.log(`- 현재날짜: "${currentDate}"`);
+        
         // 입소일이 현재 날짜보다 이전이고, 퇴소일이 없거나 현재 날짜보다 이후인 경우
-        return 입소일 <= currentDate && (퇴소일 === '' || 퇴소일 > currentDate);
+        const isAdmitted = 입소일 <= currentDate && (퇴소일 === '' || 퇴소일 > currentDate);
+        console.log(`- 입소중 여부: ${isAdmitted}`);
+        
+        return isAdmitted;
     });
+    
+    console.log('입소중인 회원들:', currentMembers);
     
     // 현원 계산 (입소 중인 회원 수)
     const currentMemberCountValue = currentMembers.length;
     currentMemberCountCell.textContent = `${currentMemberCountValue}명`;
+    console.log('현원:', currentMemberCountValue);
     
     // 이용인원 계산 (중복 제거된 회원번호 개수)
     const uniqueAttendanceMembers = [...new Set(attendanceData.map(item => item.회원번호))];
     const attendanceCountValue = uniqueAttendanceMembers.length;
     attendanceCountCell.textContent = `${attendanceCountValue}명`;
+    console.log('이용인원:', attendanceCountValue);
+    console.log('이용인원 회원번호들:', uniqueAttendanceMembers);
     
     // 결석자 계산 (입소 중인 회원 중 이용하지 않은 회원)
     const attendanceMemberNumbers = new Set(uniqueAttendanceMembers);
@@ -272,14 +304,20 @@ function updateMemberStatus() {
     
     const absentCountValue = absentMembers.length;
     absentCountCell.textContent = `${absentCountValue}명`;
+    console.log('결석자:', absentCountValue);
+    console.log('결석자 목록:', absentMembers);
     
     // 결석자 명단 표시 (자동 계산된 결과를 초기값으로 설정)
     if (absentMembers.length > 0) {
         const absentNames = absentMembers.map(member => member.회원명).join('어르신, ') + '어르신';
         absentListCell.textContent = absentNames;
+        console.log('결석자 명단:', absentNames);
     } else {
         absentListCell.textContent = '';
+        console.log('결석자 없음');
     }
+    
+    console.log('=== 회원 운영현황 업데이트 완료 ===');
     
     // 휴무자 수는 더 이상 자동 업데이트하지 않음 (사용자가 직접 편집)
 }
@@ -1007,8 +1045,23 @@ async function loadEmployeeName(employeeNumber) {
     console.log('조회할 직원번호:', employeeNumber);
     
     try {
-        // 대소문자 구분 없이 조회하기 위해 모든 데이터를 가져온 후 필터링
-        console.log('대소문자 구분 없이 조회 중...');
+        // 먼저 테이블 구조와 데이터 확인
+        console.log('테이블 구조 확인 중...');
+        const { data: sampleData, error: sampleError } = await supabase
+            .from('employeesinfo')
+            .select('*')
+            .limit(5);
+        
+        console.log('샘플 데이터:', sampleData);
+        console.log('샘플 에러:', sampleError);
+        
+        if (sampleData && sampleData.length > 0) {
+            console.log('테이블 컬럼명:', Object.keys(sampleData[0]));
+            console.log('첫 번째 행:', sampleData[0]);
+        }
+        
+        // 방법 1: 모든 데이터를 가져와서 클라이언트에서 필터링
+        console.log('전체 직원 데이터 조회 중...');
         const { data: allEmployees, error } = await supabase
             .from('employeesinfo')
             .select('*');
@@ -1017,10 +1070,42 @@ async function loadEmployeeName(employeeNumber) {
         console.log('조회 에러:', error);
         
         if (allEmployees && !error) {
-            // 대소문자 구분 없이 직원번호 매칭
-            const matchedEmployee = allEmployees.find(emp => 
-                emp.직원번호 && emp.직원번호.toLowerCase() === employeeNumber.toLowerCase()
-            );
+            console.log('전체 직원 수:', allEmployees.length);
+            
+            // 대소문자 구분 없이 직원번호 매칭 (상세 디버깅)
+            console.log('매칭 과정 상세:');
+            console.log('검색할 직원번호:', `"${employeeNumber}"`);
+            console.log('검색할 직원번호 길이:', employeeNumber.length);
+            console.log('검색할 직원번호 charCode:', Array.from(employeeNumber).map(c => c.charCodeAt(0)));
+            
+            const matchedEmployee = allEmployees.find(emp => {
+                if (!emp.직원번호) return false;
+                
+                const serverEmpNo = emp.직원번호;
+                const searchEmpNo = employeeNumber;
+                
+                console.log(`비교: "${serverEmpNo}" vs "${searchEmpNo}"`);
+                console.log(`길이: ${serverEmpNo.length} vs ${searchEmpNo.length}`);
+                console.log(`소문자 변환: "${serverEmpNo.toLowerCase()}" vs "${searchEmpNo.toLowerCase()}"`);
+                
+                // 방법 1: toLowerCase() 비교
+                const lowerMatch = serverEmpNo.toLowerCase() === searchEmpNo.toLowerCase();
+                console.log(`소문자 매칭 결과: ${lowerMatch}`);
+                
+                // 방법 2: 정확한 문자열 비교
+                const exactMatch = serverEmpNo === searchEmpNo;
+                console.log(`정확한 매칭 결과: ${exactMatch}`);
+                
+                // 방법 3: 대문자로 변환해서 비교
+                const upperMatch = serverEmpNo.toUpperCase() === searchEmpNo.toUpperCase();
+                console.log(`대문자 매칭 결과: ${upperMatch}`);
+                
+                // 방법 4: 정규식으로 대소문자 무시 비교
+                const regexMatch = new RegExp(`^${searchEmpNo}$`, 'i').test(serverEmpNo);
+                console.log(`정규식 매칭 결과: ${regexMatch}`);
+                
+                return lowerMatch || exactMatch || upperMatch || regexMatch;
+            });
             
             console.log('매칭된 직원:', matchedEmployee);
             
@@ -1031,6 +1116,21 @@ async function loadEmployeeName(employeeNumber) {
                 console.log('해당 직원번호를 찾을 수 없음');
                 console.log('검색한 직원번호:', employeeNumber);
                 console.log('서버의 직원번호들:', allEmployees.map(emp => emp.직원번호));
+                
+                // 방법 2: 대안으로 ilike 사용 (대소문자 무시)
+                console.log('ilike로 재시도 중...');
+                const { data: ilikeResult, error: ilikeError } = await supabase
+                    .from('employeesinfo')
+                    .select('*')
+                    .ilike('직원번호', employeeNumber);
+                
+                console.log('ilike 결과:', ilikeResult);
+                console.log('ilike 에러:', ilikeError);
+                
+                if (ilikeResult && ilikeResult.length > 0) {
+                    employeeNameInput.value = ilikeResult[0].직원명 || '';
+                    console.log('ilike로 직원명 설정 완료:', employeeNameInput.value);
+                }
             }
         } else {
             console.log('직원 데이터 조회 실패');
