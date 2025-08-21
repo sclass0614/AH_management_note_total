@@ -1,6 +1,24 @@
 // Supabase 클라이언트는 supabase.js에서 이미 초기화됨
 // supabaseClient 변수를 사용하여 Supabase에 접근
 
+// Supabase 클라이언트 가져오기 함수
+function getSupabaseClient() {
+    // 먼저 window.supabaseClient 확인
+    if (window.supabaseClient) {
+        return window.supabaseClient;
+    }
+    // 그 다음 window.supabase 확인
+    if (window.supabase) {
+        return window.supabase;
+    }
+    // 마지막으로 전역 supabase 객체 확인
+    if (typeof supabase !== 'undefined') {
+        return supabase;
+    }
+    console.error('Supabase 클라이언트를 찾을 수 없습니다.');
+    return null;
+}
+
 // 전역 변수
 let currentDate = new Date().toISOString().split('T')[0].replace(/-/g, ''); // 오늘 날짜 (YYYYMMDD 형식)
 let managementNoteData = []; // management_note_total 데이터
@@ -64,6 +82,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // 페이지 초기화
 function initializePage() {
     console.log('=== 페이지 초기화 시작 ===');
+    
+    // Supabase 클라이언트 초기화 확인
+    const supabaseClient = getSupabaseClient();
+    if (!supabaseClient) {
+        console.error('Supabase 클라이언트가 초기화되지 않았습니다. 잠시 후 다시 시도합니다.');
+        setTimeout(initializePage, 500);
+        return;
+    }
+    
+    console.log('Supabase 클라이언트 초기화 확인됨');
     
     // 직원번호 입력 필드 초기화
     employeeNumberInput.value = '';
@@ -164,6 +192,7 @@ function updateReportDate() {
 // Supabase에서 데이터 로드
 async function loadReportData() {
     try {
+        const supabaseClient = getSupabaseClient();
         // Supabase 클라이언트 확인
         if (!supabaseClient) {
             console.error('Supabase 클라이언트가 초기화되지 않았습니다.');
@@ -582,6 +611,7 @@ function loadCategoryContent(category) {
 
 // 데이터 입력 처리
 async function submitData() {
+    const supabaseClient = getSupabaseClient();
     // Supabase 클라이언트 확인
     if (!supabaseClient) {
         console.error('Supabase 클라이언트가 초기화되지 않았습니다.');
@@ -777,6 +807,7 @@ function showConflictModal(serverData) {
 
 // 강제 업데이트 함수
 async function forceUpdate() {
+    const supabaseClient = getSupabaseClient();
     const employeeNumber = employeeNumberInput.value.trim();
     const employeeName = employeeNameInput.value.trim();
     const content = contentTextarea.value.trim();
@@ -1112,6 +1143,7 @@ async function loadEmployeeName(employeeNumber) {
     console.log('=== 직원명 로드 시작 ===');
     console.log('조회할 직원번호:', employeeNumber);
     
+    const supabaseClient = getSupabaseClient();
     // Supabase 클라이언트 확인
     if (!supabaseClient) {
         console.error('Supabase 클라이언트가 초기화되지 않았습니다.');
