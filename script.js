@@ -9,6 +9,7 @@ let employeesInfoData = []; // employeesinfo 데이터
 let originalData = null; // 카테고리 선택 시 원본 데이터 저장 (동시 편집 충돌 방지용)
 let attendanceData = []; // activities_journal 데이터 (이용인원)
 let membersInfoData = []; // membersinfo 데이터 (전체 회원 정보)
+let isFirstLoad = true; // 페이지 첫 로드 여부 확인 플래그
 
 // DOM 요소들
 const datePicker = document.getElementById('datePicker');
@@ -51,6 +52,19 @@ document.addEventListener('DOMContentLoaded', function() {
     setupPostMessageListener(); // PostMessage 리스너 설정
     
     console.log('=== 페이지 로드 완료 ===');
+    
+    // 페이지 새로고침/종료 시 직원 정보 초기화
+    window.addEventListener('beforeunload', function() {
+        console.log('페이지 새로고침/닫기 감지 - 직원 정보 초기화');
+        // 모든 저장소에서 직원 정보 제거
+        sessionStorage.removeItem('empNo');
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('userInfo');
+        localStorage.removeItem('employeeNumber');
+        
+        // 첫 로드 플래그를 false로 설정하여 다음 방문 시 초기화되도록 함
+        isFirstLoad = false;
+    });
 });
 
 // 페이지 초기화
@@ -958,26 +972,106 @@ function customConfirm(message, title = '확인') {
 window.alert = customAlert;
 window.confirm = customConfirm;
 
-// 직원번호 초기화 (모든 자동 로드 기능 제거)
+// 직원번호 가져오기 (첫 로드 시에만)
 function loadEmployeeNumberFromURL() {
-    console.log('=== 직원번호 초기화 ===');
+    console.log('=== 직원번호 로드 시작 ===');
+    console.log('첫 로드 여부:', isFirstLoad);
     
-    // 모든 입력 필드를 빈 상태로 초기화
-    employeeNumberInput.value = '';
-    employeeNameInput.value = '';
+    // 첫 로드가 아닌 경우 (새로고침 등) 직원 정보 초기화
+    if (!isFirstLoad) {
+        console.log('새로고침/재방문 감지 - 직원 정보 초기화');
+        employeeNumberInput.value = '';
+        employeeNameInput.value = '';
+        return;
+    }
     
-    // 모든 저장소에서 직원 정보 제거
-    sessionStorage.removeItem('empNo');
-    sessionStorage.removeItem('currentUser');
-    sessionStorage.removeItem('userInfo');
-    localStorage.removeItem('employeeNumber');
+    let employeeNumber = null;
+    let urlHasEmployeeNumber = false;
     
-    // URL에서 직원번호 파라미터 제거
-    cleanURLFromEmployeeNumber();
+    // 1. URL 파라미터에서 확인 (empNo 파라미터)
+    const urlParams = new URLSearchParams(window.location.search);
+    const empNoFromURL = urlParams.get('empNo');
+    const employeeNumberFromURL = urlParams.get('employeeNumber');
+    employeeNumber = empNoFromURL || employeeNumberFromURL;
     
-    console.log('✅ 직원번호와 직원명이 완전히 초기화되었습니다.');
-    console.log('직원번호 입력필드:', employeeNumberInput.value);
-    console.log('직원명 입력필드:', employeeNameInput.value);
+    // URL에서 직원번호를 가져왔는지 확인
+    if (empNoFromURL || employeeNumberFromURL) {
+        urlHasEmployeeNumber = true;
+    }
+    
+    console.log('URL 파라미터 확인:');
+    console.log('- empNo:', empNoFromURL);
+    console.log('- employeeNumber:', employeeNumberFromURL);
+    console.log('- 최종 URL 결과:', employeeNumber);
+    console.log('- URL에서 직원번호 가져옴:', urlHasEmployeeNumber);
+    
+    // 2. sessionStorage에서 확인
+    if (!employeeNumber) {
+        const empNoFromSession = sessionStorage.getItem('empNo');
+        const currentUserFromSession = sessionStorage.getItem('currentUser');
+        const userInfoFromSession = sessionStorage.getItem('userInfo');
+        
+        employeeNumber = empNoFromSession || currentUserFromSession || userInfoFromSession;
+        
+        console.log('sessionStorage 확인:');
+        console.log('- empNo:', empNoFromSession);
+        console.log('- currentUser:', currentUserFromSession);
+        console.log('- userInfo:', userInfoFromSession);
+        console.log('- 최종 sessionStorage 결과:', employeeNumber);
+    }
+    
+    // 3. localStorage에서 확인
+    if (!employeeNumber) {
+        const employeeNumberFromLocal = localStorage.getItem('employeeNumber');
+        employeeNumber = employeeNumberFromLocal;
+        
+        console.log('localStorage 확인:');
+        console.log('- employeeNumber:', employeeNumberFromLocal);
+        console.log('- 최종 localStorage 결과:', employeeNumber);
+    }
+    
+    // 4. userInfo 요소에서 확인
+    if (!employeeNumber) {
+        const userInfoElement = document.getElementById('userInfo');
+        console.log('userInfo 요소 확인:');
+        console.log('- userInfo 요소 존재:', !!userInfoElement);
+        
+        if (userInfoElement) {
+            const userInfoText = userInfoElement.textContent;
+            console.log('- userInfo 텍스트:', userInfoText);
+            
+            const match = userInfoText.match(/([A-Za-z0-9]+)\s*님/);
+            console.log('- 정규식 매치 결과:', match);
+            
+            employeeNumber = match ? match[1].toLowerCase() : null;
+            console.log('- userInfo에서 추출한 직원번호:', employeeNumber);
+        }
+    }
+    
+    console.log('=== 최종 직원번호 결과:', employeeNumber, '===');
+    
+    if (employeeNumber) {
+        // 직원번호 입력필드에 설정
+        employeeNumberInput.value = employeeNumber;
+        console.log('직원번호 입력필드에 설정됨:', employeeNumberInput.value);
+        
+        // URL에서 직원번호를 가져왔다면 URL 정리 (보안) - 직원명 조회와 독립적으로 실행
+        if (urlHasEmployeeNumber) {
+            cleanURLFromEmployeeNumber();
+        }
+        
+        // 직원번호가 있으면 직원명도 자동으로 가져오기 (비동기로 실행)
+        loadEmployeeName(employeeNumber);
+        
+        console.log('직원번호 자동 설정 완료:', employeeNumber);
+    } else {
+        console.log('❌ 직원번호를 찾을 수 없습니다!');
+        console.log('현재 URL:', window.location.href);
+        console.log('현재 페이지 제목:', document.title);
+    }
+    
+    // 첫 로드 플래그를 false로 변경
+    isFirstLoad = false;
 }
 
 // URL에서 직원번호 파라미터 제거 (보안)
@@ -1005,9 +1099,9 @@ function cleanURLFromEmployeeNumber() {
     }
 }
 
-// 직원번호로 직원명 가져오기 (수동 호출용)
+// 직원번호로 직원명 가져오기 (선택사항)
 async function loadEmployeeName(employeeNumber) {
-    console.log('=== 직원명 수동 조회 시작 ===');
+    console.log('=== 직원명 로드 시작 ===');
     console.log('조회할 직원번호:', employeeNumber);
     
     // Supabase 클라이언트 확인
@@ -1017,8 +1111,8 @@ async function loadEmployeeName(employeeNumber) {
     }
     
     try {
-        // 정확한 매칭으로 단일 행 조회
-        console.log('직원명 조회 중...');
+        // 방법 1: 정확한 매칭으로 단일 행 조회
+        console.log('정확한 매칭으로 직원 조회 중...');
         const { data: exactMatch, error: exactError } = await supabaseClient
             .from('employeesinfo')
             .select('직원명')
@@ -1035,6 +1129,42 @@ async function loadEmployeeName(employeeNumber) {
             return;
         }
         
+        // 방법 2: 대소문자 무시 매칭 (ilike 사용)
+        console.log('대소문자 무시 매칭으로 재시도 중...');
+        const { data: ilikeResult, error: ilikeError } = await supabaseClient
+            .from('employeesinfo')
+            .select('직원명')
+            .ilike('직원번호', employeeNumber)
+            .limit(1);
+        
+        console.log('ilike 쿼리 결과:');
+        console.log('- data:', ilikeResult);
+        console.log('- error:', ilikeError);
+        
+        if (ilikeResult && ilikeResult.length > 0 && !ilikeError) {
+            employeeNameInput.value = ilikeResult[0].직원명 || '';
+            console.log('ilike로 직원명 설정 완료:', employeeNameInput.value);
+            return;
+        }
+        
+        // 방법 3: 전체 데이터를 가져와서 클라이언트에서 필터링
+        console.log('전체 데이터에서 클라이언트 필터링 중...');
+        const { data: allEmployees, error: allError } = await supabaseClient
+            .from('employeesinfo')
+            .select('직원번호, 직원명');
+        
+        if (allEmployees && !allError) {
+            const matchedEmployee = allEmployees.find(emp => 
+                emp.직원번호 && emp.직원번호.toLowerCase() === employeeNumber.toLowerCase()
+            );
+            
+            if (matchedEmployee) {
+                employeeNameInput.value = matchedEmployee.직원명 || '';
+                console.log('클라이언트 필터링으로 직원명 설정 완료:', employeeNameInput.value);
+                return;
+            }
+        }
+        
         console.log('직원명 조회 실패 또는 데이터 없음');
         
     } catch (error) {
@@ -1042,7 +1172,7 @@ async function loadEmployeeName(employeeNumber) {
         console.log('에러 상세:', error.message);
     }
     
-    console.log('=== 직원명 수동 조회 완료 ===');
+    console.log('=== 직원명 로드 완료 ===');
 }
 
 // PostMessage 통신 설정
@@ -1088,10 +1218,34 @@ function setupPostMessageListener() {
     console.log('=== PostMessage 리스너 설정 완료 ===');
 }
 
-// 현재 직원번호 가져오기 (입력필드에서만)
+// 현재 직원번호 가져오기
 function getCurrentEmployeeNumber() {
-    // 입력필드에서만 확인 (저장소에서 가져오지 않음)
-    return employeeNumberInput.value || '';
+    // 1. 입력필드에서 확인
+    if (employeeNumberInput.value) {
+        return employeeNumberInput.value;
+    }
+    
+    // 2. sessionStorage에서 확인
+    let employeeNumber = sessionStorage.getItem('empNo') || 
+                        sessionStorage.getItem('currentUser') || 
+                        sessionStorage.getItem('userInfo');
+    
+    // 3. localStorage에서 확인
+    if (!employeeNumber) {
+        employeeNumber = localStorage.getItem('employeeNumber');
+    }
+    
+    // 4. userInfo 요소에서 확인
+    if (!employeeNumber) {
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement) {
+            const userInfoText = userInfoElement.textContent;
+            const match = userInfoText.match(/([A-Za-z0-9]+)\s*님/);
+            employeeNumber = match ? match[1].toLowerCase() : null;
+        }
+    }
+    
+    return employeeNumber;
 }
 
 // text-area 더블클릭 이벤트 설정
