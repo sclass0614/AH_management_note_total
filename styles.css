@@ -278,25 +278,25 @@ body {
 .report-table th:nth-child(1), /* 담당직종 */
 .report-table td:nth-child(1) {
     width: 15%;
-    min-width: 100px;
+    /* min-width: 100px; */
 }
 
 .report-table th:nth-child(2), /* 직원번호 */
 .report-table td:nth-child(2) {
-    width: 12%;
-    min-width: 80px;
+    width: 13%;
+    /* min-width: 80px; */
 }
 
 .report-table th:nth-child(3), /* 직원명 */
 .report-table td:nth-child(3) {
-    width: 12%;
-    min-width: 80px;
+    width: 11%;
+    /* min-width: 80px; */
 }
 
 .report-table th:nth-child(4), /* 개인업무 */
 .report-table td:nth-child(4) {
-    width: 61%;
-    min-width: 200px;
+    width: 62%;
+    /* min-width: 200px; */
 }
 
 /* 우측: 편집 패널 */
