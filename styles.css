@@ -830,6 +830,13 @@ body {
         border-radius: 0 !important;
         height: auto !important;
         overflow: visible !important;
+        /* 높이 제한 완전 해제 */
+        max-height: none !important;
+        min-height: auto !important;
+        /* 페이지 분할 허용 */
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        contain: none !important;
     }
     
     /* A4용지를 인쇄에 최적화 - 웹과 동일한 크기 유지 */
@@ -852,6 +859,11 @@ body {
         zoom: 1 !important;
         -webkit-print-color-adjust: exact !important;
         color-adjust: exact !important;
+        /* 페이지 분할을 위한 추가 설정 */
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        /* 높이 제한 완전 해제 */
+        contain: none !important;
     }
     
     /* div로 변경된 텍스트 영역 - 자연스러운 페이지 분할 */
@@ -1075,33 +1087,200 @@ body {
         break-inside: auto !important;
         break-before: auto !important;
         break-after: auto !important;
+        /* 섹션 자체가 분할되도록 설정 */
+        overflow: visible !important;
+        /* 높이 제한 완전 해제 */
+        height: auto !important;
+        max-height: none !important;
+        min-height: auto !important;
+        /* 레이아웃 제한 해제 */
+        contain: none !important;
+        /* 강제 분할을 위한 추가 설정 */
+        display: block !important;
+        position: static !important;
     }
     
     /* 테이블 섹션 - 자연스러운 분할 */
     .table-container {
         margin-bottom: 1.5rem !important;
         page-break-inside: auto !important;
+        break-inside: auto !important;
+        /* 테이블이 페이지 경계에서 자연스럽게 분할되도록 */
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
     }
     
     /* 테이블 행들의 자연스러운 분할 */
     .report-table tr {
         page-break-inside: auto !important;
         page-break-after: auto !important;
+        break-inside: auto !important;
+        break-after: auto !important;
+        /* 행 분할 최적화 */
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        /* 행이 페이지 경계에서 강제로 분할되도록 설정 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        /* 행 자체의 분할 허용 */
+        display: table-row !important;
+        position: static !important;
+        contain: none !important;
     }
     
     /* 테이블 헤더는 새 페이지에서 반복 */
     .report-table thead {
         display: table-header-group !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        /* 헤더 반복 강화 */
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        /* 헤더 분할 방지 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 헤더 레이아웃 최적화 */
+        contain: none !important;
+        position: static !important;
+        /* 헤더 반복 강제 설정 */
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        /* 테이블 헤더 그룹 강제 설정 */
+        display: table-header-group !important;
+        /* 헤더 반복을 위한 추가 설정 */
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+    
+    /* 테이블 헤더 행 강제 반복 */
+    .report-table thead tr {
+        display: table-row !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* 헤더 행이 분할되지 않도록 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 헤더 행 레이아웃 최적화 */
+        contain: none !important;
+        position: static !important;
+    }
+    
+    /* 테이블 헤더 셀 강제 반복 */
+    .report-table thead th {
+        display: table-cell !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* 헤더 셀이 분할되지 않도록 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 헤더 셀 레이아웃 최적화 */
+        contain: none !important;
+        position: static !important;
+        /* 헤더 셀 스타일 강화 */
+        background-color: #f0f0f0 !important;
+        font-weight: bold !important;
+        border: 1px solid #000 !important;
+        padding: 6px 8px !important;
+        text-align: left !important;
+        vertical-align: top !important;
+        font-size: 1.2rem !important;
     }
     
     /* 테이블 본체 자연스러운 분할 */
     .report-table tbody {
         page-break-inside: auto !important;
+        break-inside: auto !important;
+        /* 본체 분할 최적화 */
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        /* 본체 분할 강화 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 본체 레이아웃 제한 해제 */
+        contain: none !important;
+        position: static !important;
+        display: table-row-group !important;
     }
     
-    /* 개별 테이블 셀 분할 방지 (내용이 적은 경우) */
+    /* 개별 테이블 셀 분할 허용 */
     .report-table td {
         page-break-inside: auto !important;
+        break-inside: auto !important;
+        /* 셀 내용이 길어도 분할 허용 */
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        /* 셀 분할 최적화 */
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        vertical-align: top !important;
+        /* 텍스트 분할 허용 */
+        word-break: break-word !important;
+        hyphens: auto !important;
+        /* 셀 자체의 분할 허용 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 셀 레이아웃 제한 해제 */
+        contain: none !important;
+        position: static !important;
+        display: table-cell !important;
+    }
+    
+    /* 테이블 헤더 셀도 분할 허용 */
+    .report-table th {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    /* 테이블 자체의 페이지 분할 설정 */
+    .report-table {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        /* 테이블이 페이지 경계에서 자연스럽게 분할되도록 */
+        table-layout: auto !important;
+        /* 강제 분할을 위한 추가 설정 */
+        height: auto !important;
+        max-height: none !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        contain: none !important;
+        /* 테이블 분할 최적화 */
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    
+    /* 테이블 컨테이너의 분할 설정 */
+    .table-container {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        overflow: visible !important;
+        /* 컨테이너 분할 최적화 */
+        height: auto !important;
+        max-height: none !important;
+        min-height: auto !important;
+        contain: none !important;
+        /* 강제 분할을 위한 추가 설정 */
+        display: block !important;
+        position: static !important;
+        /* 스크롤 제거 */
+        overflow-x: visible !important;
+        overflow-y: visible !important;
     }
     
     /* 보고서 헤더 여백 */
@@ -1156,6 +1335,209 @@ body {
         max-height: none !important;
         /* 레이아웃 제한 해제 */
         contain: none !important;
+    }
+    
+    /* 브라우저 강제 테이블 분할 설정 */
+    @page {
+        margin: 10mm 0mm !important;
+        size: A4 portrait !important;
+        /* 페이지 분할 최적화 */
+        orphans: 1 !important;
+        widows: 1 !important;
+    }
+    
+    /* 모든 테이블 요소에 강제 분할 적용 */
+    table, thead, tbody, tr, td, th {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        contain: none !important;
+        /* 모든 테이블 요소의 분할 허용 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 레이아웃 제한 해제 */
+        position: static !important;
+        display: revert !important;
+    }
+    
+    /* 테이블 행 분할 강제 설정 */
+    tr {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        /* 행이 페이지 경계에서 강제로 분할되도록 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 행 레이아웃 최적화 */
+        display: table-row !important;
+        contain: none !important;
+        position: static !important;
+    }
+    
+    /* 테이블 셀 분할 강제 설정 */
+    td, th {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        /* 셀이 페이지 경계에서 강제로 분할되도록 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 셀 레이아웃 최적화 */
+        display: table-cell !important;
+        contain: none !important;
+        position: static !important;
+        /* 텍스트 분할 최적화 */
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+        hyphens: auto !important;
+        vertical-align: top !important;
+    }
+    
+    /* 테이블 헤더 반복 강제 설정 */
+    thead {
+        display: table-header-group !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* 헤더 반복 강제 설정 */
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        /* 테이블 헤더 그룹 강제 설정 */
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+    
+    /* 테이블 헤더 행 반복 강제 설정 */
+    thead tr {
+        display: table-row !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* 헤더 행이 분할되지 않도록 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+    }
+    
+    /* 테이블 헤더 셀 반복 강제 설정 */
+    thead th {
+        display: table-cell !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* 헤더 셀이 분할되지 않도록 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 헤더 셀 스타일 강화 */
+        background-color: #f0f0f0 !important;
+        font-weight: bold !important;
+        border: 1px solid #000 !important;
+        padding: 6px 8px !important;
+        text-align: left !important;
+        vertical-align: top !important;
+        font-size: 1.2rem !important;
+    }
+    
+    /* 개인업무일지 테이블 특별 처리 */
+    #individualWorkTable {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        contain: none !important;
+        /* 강제 분할을 위한 추가 설정 */
+        table-layout: auto !important;
+        border-collapse: collapse !important;
+    }
+    
+    #individualWorkTable tbody {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    #individualWorkTable tr {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    #individualWorkTable thead {
+        display: table-header-group !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* 헤더 반복 강제 설정 */
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        /* 테이블 헤더 그룹 강제 설정 */
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+    
+    #individualWorkTable thead tr {
+        display: table-row !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* 헤더 행이 분할되지 않도록 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+    }
+    
+    #individualWorkTable thead th {
+        display: table-cell !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* 헤더 셀이 분할되지 않도록 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 헤더 셀 스타일 강화 */
+        background-color: #f0f0f0 !important;
+        font-weight: bold !important;
+        border: 1px solid #000 !important;
+        padding: 6px 8px !important;
+        text-align: left !important;
+        vertical-align: top !important;
+        font-size: 1.2rem !important;
+    }
+    
+    #individualWorkTable td,
+    #individualWorkTable th {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+        /* 셀 분할 강화 */
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+        /* 셀 레이아웃 제한 해제 */
+        contain: none !important;
+        position: static !important;
+        display: table-cell !important;
+        /* 텍스트 분할 최적화 */
+        hyphens: auto !important;
+        vertical-align: top !important;
     }
 }
 
