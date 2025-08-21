@@ -96,16 +96,18 @@ body {
 
 /* A4용지 스타일 */
 .a4-paper {
-    width: 200mm;
+    width: 210mm; /* 실제 A4용지 너비 */
     min-height: 297mm;
     background: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 16mm;
     margin: 0 auto;
     border-radius: 4px;
-    font-size: 12pt;
+    font-size: 1rem;
     line-height: 1.6;
     font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
+    /* 인쇄 시와 동일한 여백을 위해 box-sizing 설정 */
+    box-sizing: border-box;
 }
 
 .report-header {
@@ -116,14 +118,14 @@ body {
 }
 
 .report-header h1 {
-    font-size: 18pt;
+    font-size: 1.5rem;
     font-weight: bold;
     color: var(--main-color);
     margin-bottom: 0.5rem;
 }
 
 .report-date {
-    font-size: 12pt;
+    font-size: 1rem;
     color: #666;
     text-align: right;
 }
@@ -133,7 +135,7 @@ body {
 }
 
 .report-section h2 {
-    font-size: 14pt;
+    font-size: 1.2rem;
     font-weight: bold;
     color: var(--main-color);
     margin-bottom: 0.5rem;
@@ -227,13 +229,17 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 0.4rem;
-    font-size: 11pt;
-    line-height: 1.4;
+    font-size: 1rem;
+    line-height: 1.6;
     resize: none;
     background-color: #fafafa;
     overflow: hidden;
     font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
     box-sizing: border-box;
+    /* div 요소에서 줄바꿈 처리 */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .report-textarea:focus {
@@ -248,7 +254,7 @@ body {
 .report-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 11pt;
+    font-size: 1rem;
 }
 
 .report-table th,
@@ -416,11 +422,12 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 14px;
-    min-height: 120px;
+    min-height: 240px; /* 최소 높이 설정 */
+    max-height: none; /* 최대 높이 제한 없음 */
     resize: none;
     font-family: inherit;
     transition: border-color 0.3s;
-    overflow: hidden;
+    overflow: hidden; /* 스크롤 숨기고 자동 높이 조정 */
 }
 
 .form-textarea:focus {
@@ -471,7 +478,7 @@ body {
     
     .a4-paper {
         padding: 10mm;
-        font-size: 10pt;
+        font-size: 1rem;
     }
     
     .edit-header {
@@ -779,8 +786,16 @@ body {
     transform: translateY(0);
 }
 
-/* 인쇄 스타일 */
+/* 인쇄 스타일 - 웹과 동일한 크기 유지 */
 @media print {
+    /* 전역 스케일링 방지 */
+    html {
+        font-size: 16px !important; /* 기본 rem 크기 고정 */
+        transform: scale(1) !important;
+        zoom: 1 !important;
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
     /* 헤더와 편집 패널 숨기기 */
     .header,
     .edit-panel {
@@ -810,112 +825,94 @@ body {
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
-        padding: 0.6rem !important;
+        padding: 0 !important;
         background-color: white !important;
-        border-radius: 8px !important;
+        border-radius: 0 !important;
         height: auto !important;
         overflow: visible !important;
-        page-break-after: auto !important;
-        transform: none !important;
-        zoom: 1 !important;
-        -webkit-print-color-adjust: exact !important;
-        color-adjust: exact !important;
     }
     
-    /* A4용지를 인쇄에 최적화 */
+    /* A4용지를 인쇄에 최적화 - 웹과 동일한 크기 유지 */
     .a4-paper {
-        width: 200mm !important;
+        width: 100% !important;
         min-height: auto !important;
         max-height: none !important;
         box-shadow: none !important;
-        padding: 16mm !important;
-        margin: 0 auto !important;
-        border-radius: 4px !important;
-        page-break-inside: auto !important;
+        padding: 25mm !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
         height: auto !important;
         overflow: visible !important;
-        font-size: 12pt !important;
+        font-size: 1.3rem !important;
         line-height: 1.6 !important;
         font-family: "맑은 고딕", "Malgun Gothic", sans-serif !important;
-        transform: none !important;
+        box-sizing: border-box !important;
+        /* 브라우저 스케일링 방지 */
+        transform: scale(1) !important;
         zoom: 1 !important;
         -webkit-print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
     
-    /* 보고서 섹션들이 페이지 나눔 방지 (단, 개인업무일지는 예외) */
-    .report-section {
-        page-break-inside: avoid !important;
-        margin-bottom: 2rem !important;
-        page-break-after: auto !important;
-    }
-    
-    /* 개인업무일지 섹션은 자연스럽게 분할 허용 */
-    .individual-work-section {
-        page-break-inside: auto !important;
-    }
-    
-    /* 테이블이 페이지를 넘어갈 때 자연스럽게 분할 */
-    .table-container {
-        page-break-inside: auto !important;
-    }
-    
-    /* 테이블 스타일 조정 */
-    .report-table {
-        border-collapse: collapse !important;
-        width: 100% !important;
-        font-size: 11pt !important;
-        page-break-inside: auto !important;
-    }
-    
-    .report-table th,
-    .report-table td {
-        border: 1px solid #000 !important;
-        background-color: white !important;
-        padding: 4px 6px !important;
-        text-align: left !important;
-        vertical-align: top !important;
-        page-break-inside: avoid !important;
-    }
-    
-    .report-table th {
-        background-color: #f0f0f0 !important;
-        font-weight: bold !important;
-    }
-    
-    /* 테이블 행이 페이지를 넘어갈 때 자연스럽게 분할 */
-    .report-table tr {
-        page-break-inside: avoid !important;
-        page-break-after: auto !important;
-    }
-    
-    /* 회원 운영현황 테이블 특별 처리 */
-    .member-status-table {
-        page-break-inside: avoid !important;
-    }
-    
-    .member-status-table tr {
-        page-break-inside: avoid !important;
-    }
-    
-    /* 텍스트 영역 스타일 조정 */
+    /* div로 변경된 텍스트 영역 - 자연스러운 페이지 분할 */
     .report-textarea {
+        /* 기본 스타일 */
         border: 1px solid #000 !important;
-        background-color: white !important;
-        min-height: 60px !important;
-        max-height: none !important;
-        overflow: visible !important;
-        height: auto !important;
-        resize: none !important;
-        font-size: 11pt !important;
-        line-height: 1.4 !important;
-        padding: 0.4rem !important;
+        background-color: #fafafa !important;
+        padding: 0.5rem !important;
         font-family: "맑은 고딕", "Malgun Gothic", sans-serif !important;
+        font-size: 1.2rem !important;
+        line-height: 1.6 !important;
         width: 100% !important;
         border-radius: 4px !important;
-        transform: none !important;
-        zoom: 1 !important;
         box-sizing: border-box !important;
+        
+        /* div 요소 기본 설정 - 높이 제한 완전 해제 */
+        display: block !important;
+        min-height: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        
+        /* 텍스트 처리 */
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        hyphens: auto !important;
+        
+        /* 페이지 분할 최적화 */
+        page-break-inside: auto !important;
+        page-break-before: auto !important;
+        page-break-after: auto !important;
+        break-inside: auto !important;
+        break-before: auto !important;
+        break-after: auto !important;
+        
+        /* 고아/과부 최소화 */
+        orphans: 1 !important;
+        widows: 1 !important;
+        
+        /* 인쇄 최적화 */
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        
+        /* 스크롤바 완전 제거 */
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+    }
+    
+    /* 웹킷 기반 브라우저 스크롤바 완전 숨김 */
+    .report-textarea::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        height: 0 !important;
     }
     
     /* 전체 배경을 흰색으로 */
@@ -925,74 +922,240 @@ body {
         height: auto !important;
         margin: 0 !important;
         padding: 0 !important;
+        /* 브라우저 기본 스케일링 방지 */
+        transform: scale(1) !important;
+        zoom: 1 !important;
         -webkit-print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
     
-    /* 인쇄 시 브라우저 기본 여백 제거 */
+    /* 인쇄 시 브라우저 기본 여백 설정 */
     @page {
+        margin: 10mm 0mm !important;
+        size: A4 portrait !important;
+    }
+    
+    /* 브라우저 기본 여백 완전 제거 */
+    * {
         margin: 0 !important;
         padding: 0 !important;
-        size: A4 !important;
-        -webkit-print-color-adjust: exact !important;
-        color-adjust: exact !important;
-    }
-    
-    /* 모든 컨테이너의 높이 제한 해제 */
-    * {
-        -webkit-print-color-adjust: exact !important;
-        color-adjust: exact !important;
         height: auto !important;
         max-height: none !important;
         overflow: visible !important;
         font-family: "맑은 고딕", "Malgun Gothic", sans-serif !important;
-    }
-    
-    /* 메인 컨테이너 여백 동일화 */
-    .main-container {
-        padding: 0.6rem !important;
-        margin: 0 !important;
+        box-sizing: border-box !important;
+        /* 모든 요소에 스케일링 방지 적용 */
         transform: none !important;
         zoom: 1 !important;
         -webkit-print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
     
-    /* 콘텐츠 영역 여백 동일화 */
-    .content-area {
+    html, body {
         margin: 0 !important;
         padding: 0 !important;
-        gap: 2rem !important;
-        transform: none !important;
-        zoom: 1 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
     }
     
-    /* 제목 스타일 */
+    /* 제목과 테이블 폰트 크기 조정 - 웹페이지와 동일하게 */
     .report-header h1 {
-        font-size: 18pt !important;
+        font-size: 2rem !important;
         margin-bottom: 0.5rem !important;
         text-align: center !important;
     }
     
     .report-date {
-        font-size: 12pt !important;
+        font-size: 1.3rem !important;
         margin-bottom: 10px !important;
         text-align: right !important;
     }
     
-    /* 섹션 제목 */
     .report-section h2 {
-        font-size: 14pt !important;
+        font-size: 1.4rem !important;
         margin-bottom: 0.5rem !important;
         border-bottom: 1px solid #000 !important;
         padding-bottom: 0.25rem !important;
     }
     
-    /* 보고서 헤더 */
-    .report-header {
+    .report-table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .report-table th,
+    .report-table td {
+        border: 1px solid #000 !important;
+        background-color: white !important;
+        padding: 6px 8px !important;
+        text-align: left !important;
+        vertical-align: top !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .report-table th {
+        background-color: #f0f0f0 !important;
+        font-weight: bold !important;
+    }
+    
+    /* 회원 운영현황 테이블 - 웹페이지와 동일한 열 너비 비율 */
+    .member-status-container {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .member-status-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .member-status-table tr {
+        border-bottom: 1px solid #e9ecef !important;
+    }
+    
+    .member-status-table tr:last-child {
+        border-bottom: none !important;
+    }
+    
+    .status-label {
+        font-weight: bold !important;
+        color: #495057 !important;
+        padding: 8px 0 !important;
+        width: 100px !important;
+        vertical-align: top !important;
+        font-size: 1.2rem !important;
+        white-space: nowrap !important;
+    }
+    
+    .status-count {
+        color: #007bff !important;
+        font-weight: 500 !important;
+        padding: 8px 10px !important;
+        width: 80px !important;
+        vertical-align: top !important;
         text-align: center !important;
-        margin-bottom: 2rem !important;
-        border-bottom: 2px solid #000 !important;
+        font-size: 1.2rem !important;
+        white-space: nowrap !important;
+    }
+    
+    .status-detail {
+        color: #6c757d !important;
+        padding: 8px 0 8px 10px !important;
+        vertical-align: top !important;
+        font-size: 1.2rem !important;
+    }
+    
+    /* 페이지 나눔 및 여백 설정 - 강제 분할 허용 */
+    .report-section {
+        margin-bottom: 1rem !important;
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+        page-break-before: auto !important;
+        /* 최신 CSS 분할 속성 */
+        break-inside: auto !important;
+        break-before: auto !important;
+        break-after: auto !important;
+    }
+    
+    /* 개인업무일지 섹션 - 강제 분할 허용 */
+    .individual-work-section {
+        margin-bottom: 1rem !important;
+        padding-bottom: 0.5rem !important;
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+        page-break-before: auto !important;
+        /* 최신 CSS 분할 속성 */
+        break-inside: auto !important;
+        break-before: auto !important;
+        break-after: auto !important;
+    }
+    
+    /* 테이블 섹션 - 자연스러운 분할 */
+    .table-container {
+        margin-bottom: 1.5rem !important;
+        page-break-inside: auto !important;
+    }
+    
+    /* 테이블 행들의 자연스러운 분할 */
+    .report-table tr {
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+    }
+    
+    /* 테이블 헤더는 새 페이지에서 반복 */
+    .report-table thead {
+        display: table-header-group !important;
+    }
+    
+    /* 테이블 본체 자연스러운 분할 */
+    .report-table tbody {
+        page-break-inside: auto !important;
+    }
+    
+    /* 개별 테이블 셀 분할 방지 (내용이 적은 경우) */
+    .report-table td {
+        page-break-inside: auto !important;
+    }
+    
+    /* 보고서 헤더 여백 */
+    .report-header {
+        margin-bottom: 1.5rem !important;
         padding-bottom: 1rem !important;
+        border-bottom: 2px solid #000 !important;
+        page-break-after: auto !important;
+    }
+    
+    /* 보고서 헤더 제목 */
+    .report-header h1 {
+        margin-bottom: 0.8rem !important;
+    }
+    
+    /* 날짜 여백 */
+    .report-date {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* 섹션 제목 여백 */
+    .report-section h2 {
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+        padding-top: 0.3rem !important;
+        /* 제목과 내용을 함께 유지하되 분할 허용 */
+        page-break-after: auto !important;
+        page-break-before: auto !important;
+        page-break-inside: avoid !important;
+        /* 최신 CSS */
+        break-after: auto !important;
+        break-before: auto !important;
+        break-inside: avoid !important;
+        /* 고아 방지 최소화 */
+        orphans: 1 !important;
+        widows: 1 !important;
+    }
+    
+    /* textarea 영역의 자연스러운 분할 */
+    .report-textarea {
+        page-break-inside: auto !important;
+        page-break-before: auto !important;
+        page-break-after: auto !important;
+        orphans: 1 !important;
+        widows: 1 !important;
+        /* 텍스트 영역이 통째로 넘어가지 않도록 강제 분할 */
+        break-inside: auto !important;
+        break-before: auto !important;
+        break-after: auto !important;
+        overflow-wrap: break-word !important;
+        /* 높이 제한 완전 해제 */
+        max-height: none !important;
+        /* 레이아웃 제한 해제 */
+        contain: none !important;
     }
 }
+

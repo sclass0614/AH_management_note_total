@@ -111,6 +111,23 @@ function setupEventListeners() {
             employeeNameInput.value = '';
         }
     });
+    
+    // contentTextarea 포커스 시 카테고리 선택 확인
+    contentTextarea.addEventListener('focus', function() {
+        if (!categorySelect.value) {
+            customAlert('카테고리를 먼저 선택해주세요.', '카테고리 선택');
+            // 포커스를 카테고리 선택으로 이동
+            categorySelect.focus();
+        }
+    });
+    
+    // contentTextarea 입력 시 높이 자동 조정
+    contentTextarea.addEventListener('input', function() {
+        adjustTextareaHeight();
+    });
+    
+    // text-area 더블클릭 이벤트 설정
+    setupTextareaDoubleClickEvents();
 }
 
 // 보고서 날짜 업데이트
@@ -242,25 +259,21 @@ function updateReportUI() {
     // 회원 운영현황 업데이트
     updateMemberStatus();
     
-    // 전달사항 업데이트
+    // 전달사항 업데이트 (div 요소)
     const handoverData = managementNoteData.filter(item => item.카테고리 === '전달사항');
-    handoverContent.value = handoverData.map(item => item.내용).join('\n\n');
-    adjustReportTextareaHeight(handoverContent);
+    handoverContent.textContent = handoverData.map(item => item.내용).join('\n\n');
     
-    // 어르신 특이사항 업데이트
+    // 어르신 특이사항 업데이트 (div 요소)
     const elderlyData = managementNoteData.filter(item => item.카테고리 === '어르신 특이사항');
-    elderlyContent.value = elderlyData.map(item => item.내용).join('\n\n');
-    adjustReportTextareaHeight(elderlyContent);
+    elderlyContent.textContent = elderlyData.map(item => item.내용).join('\n\n');
     
-    // 기본규칙 업데이트
+    // 기본규칙 업데이트 (div 요소)
     const basicRulesData = managementNoteData.filter(item => item.카테고리 === '기본규칙');
-    basicRulesContent.value = basicRulesData.map(item => item.내용).join('\n\n');
-    adjustReportTextareaHeight(basicRulesContent);
+    basicRulesContent.textContent = basicRulesData.map(item => item.내용).join('\n\n');
     
-    // 기타사항 업데이트
+    // 기타사항 업데이트 (div 요소)
     const otherMattersData = managementNoteData.filter(item => item.카테고리 === '기타사항');
-    otherMattersContent.value = otherMattersData.map(item => item.내용).join('\n\n');
-    adjustReportTextareaHeight(otherMattersContent);
+    otherMattersContent.textContent = otherMattersData.map(item => item.내용).join('\n\n');
     
     // 개인업무일지 테이블 업데이트
     updateIndividualWorkTable();
@@ -572,8 +585,15 @@ async function submitData() {
     const category = categorySelect.value;
     const content = contentTextarea.value.trim();
     
-    if (!category || !content) {
-        await customAlert('카테고리와 내용을 입력해주세요.', '입력 확인');
+    // 카테고리 선택 확인
+    if (!category) {
+        await customAlert('카테고리를 먼저 선택해주세요.', '카테고리 선택');
+        return;
+    }
+    
+    // 내용 입력 확인
+    if (!content) {
+        await customAlert('내용을 입력해주세요.', '내용 입력');
         return;
     }
     
@@ -582,20 +602,20 @@ async function submitData() {
         
         // 날짜와 카테고리로 기존 데이터 확인
         console.log('날짜와 카테고리로 기존 데이터 확인:', currentDate, category);
-        
+            
         const { data: existingData, error: fetchError } = await supabaseClient
-            .from('management_note_total')
-            .select('*')
+                .from('management_note_total')
+                .select('*')
             .eq('날짜', currentDate)
             .eq('카테고리', category)
-            .single();
-        
+                .single();
+            
         if (fetchError && fetchError.code !== 'PGRST116') {
             console.error('기존 데이터 조회 에러:', fetchError);
             await customAlert('데이터 조회 중 오류가 발생했습니다.', '오류');
-            return;
-        }
-        
+                return;
+            }
+            
         if (existingData) {
             // 기존 데이터가 있으면 업데이트
             console.log('기존 데이터 업데이트:', existingData.id);
@@ -675,11 +695,11 @@ function adjustTextareaHeight() {
     textarea.style.height = textarea.scrollHeight + 'px';
 }
 
-// 보고서 textarea 높이 자동 조정 함수
-function adjustReportTextareaHeight(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
-}
+// 보고서 textarea 높이 자동 조정 함수 (div로 변경되어 불필요)
+// function adjustReportTextareaHeight(textarea) {
+//     textarea.style.height = 'auto';
+//     textarea.style.height = textarea.scrollHeight + 'px';
+// }
 
 // 충돌 모달 표시 함수
 function showConflictModal(serverData) {
@@ -827,11 +847,10 @@ function logData() {
 
 // 인쇄 함수
 function printReport() {
-    // 인쇄 전에 현재 보고서 데이터가 최신인지 확인
     console.log('인쇄 시작...');
-    
-    // 브라우저의 인쇄 기능 호출
+    console.log('CSS @media print 스타일로 인쇄 처리');
     window.print();
+    console.log('인쇄 실행 완료');
 }
 
 // 전역 함수로 노출 (디버깅용)
@@ -1200,4 +1219,64 @@ function getCurrentEmployeeNumber() {
     }
     
     return employeeNumber;
+}
+
+// text-area 더블클릭 이벤트 설정
+function setupTextareaDoubleClickEvents() {
+    // 전달사항 text-area 더블클릭
+    handoverContent.addEventListener('dblclick', function() {
+        loadTextareaToEditPanel('전달사항');
+    });
+    
+    // 어르신 특이사항 text-area 더블클릭
+    elderlyContent.addEventListener('dblclick', function() {
+        loadTextareaToEditPanel('어르신 특이사항');
+    });
+    
+    // 기본규칙 text-area 더블클릭
+    basicRulesContent.addEventListener('dblclick', function() {
+        loadTextareaToEditPanel('기본규칙');
+    });
+    
+    // 기타사항 text-area 더블클릭
+    otherMattersContent.addEventListener('dblclick', function() {
+        loadTextareaToEditPanel('기타사항');
+    });
+}
+
+// text-area 내용을 편집 패널에 로드
+function loadTextareaToEditPanel(category) {
+    // 카테고리 선택
+    categorySelect.value = category;
+    
+    // 해당 카테고리의 데이터 찾기
+    const categoryData = managementNoteData.filter(item => item.카테고리 === category);
+    
+    if (categoryData.length > 0) {
+        // 첫 번째 데이터의 직원 정보 설정
+        const firstData = categoryData[0];
+        employeeNumberInput.value = firstData.직원번호 || '';
+        employeeNameInput.value = firstData.직원명 || '';
+        
+        // 모든 내용을 합쳐서 textarea에 로드
+        const allContent = categoryData.map(item => item.내용).join('\n\n');
+        contentTextarea.value = allContent;
+        
+        // textarea 높이 자동 조정
+        adjustTextareaHeight();
+        
+        // 편집 패널로 스크롤
+        document.querySelector('.edit-panel').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+        
+        console.log(`${category} 카테고리 편집 패널에 로드 완료`);
+    } else {
+        // 데이터가 없으면 카테고리만 선택
+        contentTextarea.value = '';
+        employeeNumberInput.value = '';
+        employeeNameInput.value = '';
+        console.log(`${category} 카테고리 데이터 없음`);
+    }
 }

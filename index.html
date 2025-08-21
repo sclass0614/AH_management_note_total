@@ -13,7 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <!-- 스크립트 파일 -->
     <script src="supabase.js"></script>
-    
+    <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script>
+
   </head>
   <body>
     <div class="main-container">
@@ -69,22 +70,22 @@
             
             <div class="report-section">
               <h2>1. 전달사항</h2>
-              <textarea class="report-textarea" id="handoverContent" readonly></textarea>
+              <div class="report-textarea" id="handoverContent" contenteditable="false"></div>
             </div>
             
             <div class="report-section">
               <h2>2. 어르신 특이사항</h2>
-              <textarea class="report-textarea" id="elderlyContent" readonly></textarea>
+              <div class="report-textarea" id="elderlyContent" contenteditable="false"></div>
             </div>
             
             <div class="report-section">
               <h2>3. 기본규칙</h2>
-              <textarea class="report-textarea" id="basicRulesContent" readonly></textarea>
+              <div class="report-textarea" id="basicRulesContent" contenteditable="false"></div>
             </div>
             
             <div class="report-section">
               <h2>4. 기타사항</h2>
-              <textarea class="report-textarea" id="otherMattersContent" readonly></textarea>
+              <div class="report-textarea" id="otherMattersContent" contenteditable="false"></div>
             </div>
             
             <div class="report-section individual-work-section">
