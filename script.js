@@ -33,6 +33,8 @@ const datePicker = document.getElementById('datePicker');
 const updateReportBtn = document.getElementById('updateReportBtn');
 const employeeNumberInput = document.getElementById('employeeNumber');
 const employeeNameInput = document.getElementById('employeeName');
+const originalEmployeeNumberInput = document.getElementById('originalEmployeeNumber');
+const originalEmployeeNameInput = document.getElementById('originalEmployeeName');
 const categorySelect = document.getElementById('categorySelect');
 const contentTextarea = document.getElementById('contentTextarea');
 const submitBtn = document.getElementById('submitBtn');
@@ -96,6 +98,8 @@ function initializePage() {
     // 직원번호 입력 필드 초기화
     employeeNumberInput.value = '';
     employeeNameInput.value = '';
+    originalEmployeeNumberInput.value = '';
+    originalEmployeeNameInput.value = '';
     console.log('직원번호 입력 필드 초기화 완료');
     
     // 오늘 날짜로 date picker 설정 (YYYY-MM-DD 형식)
@@ -146,6 +150,9 @@ function setupEventListeners() {
         } else {
             // 카테고리가 선택되지 않으면 내용만 비움 (직원 정보는 유지)
             contentTextarea.value = '';
+            // 기존 작성자 정보도 초기화
+            originalEmployeeNumberInput.value = '';
+            originalEmployeeNameInput.value = '';
             // 직원번호와 직원명은 유지 (초기화하지 않음)
         }
     });
@@ -592,6 +599,10 @@ function loadCategoryContent(category) {
         const firstData = categoryData[0];
         contentTextarea.value = firstData.내용 || '';
         
+        // 기존 작성자 정보 표시
+        originalEmployeeNumberInput.value = firstData.직원번호 || '';
+        originalEmployeeNameInput.value = firstData.직원명 || '';
+        
         // 원본 데이터 저장 (동시 편집 충돌 방지용) - 날짜와 카테고리 기준으로 변경
         originalData = {
             날짜: currentDate,
@@ -602,6 +613,9 @@ function loadCategoryContent(category) {
         };
     } else {
         contentTextarea.value = '';
+        // 기존 작성자 정보 초기화
+        originalEmployeeNumberInput.value = '';
+        originalEmployeeNameInput.value = '';
         originalData = null;
     }
     
@@ -860,6 +874,10 @@ function clearForm() {
     // employeeNumberInput.value = '';
     // employeeNameInput.value = '';
     
+    // 기존 작성자 정보도 유지 (초기화하지 않음)
+    // originalEmployeeNumberInput.value = '';
+    // originalEmployeeNameInput.value = '';
+    
     // 카테고리와 내용만 초기화
     categorySelect.value = '';
     contentTextarea.value = '';
@@ -870,7 +888,7 @@ function clearForm() {
     // textarea 높이 초기화
     contentTextarea.style.height = 'auto';
     
-    console.log('입력 폼 초기화 완료 - 직원번호와 직원명은 유지됨');
+    console.log('입력 폼 초기화 완료 - 직원번호, 직원명, 기존 작성자 정보는 유지됨');
 }
 
 
@@ -1320,10 +1338,16 @@ function loadTextareaToEditPanel(category) {
     const categoryData = managementNoteData.filter(item => item.카테고리 === category);
     
     if (categoryData.length > 0) {
-        // 첫 번째 데이터의 직원 정보 설정
+        // 첫 번째 데이터의 기존 작성자 정보 설정
         const firstData = categoryData[0];
-        employeeNumberInput.value = firstData.직원번호 || '';
-        employeeNameInput.value = firstData.직원명 || '';
+        
+        // 직원번호와 직원명은 현재 로그인한 사용자 정보로 유지 (변경하지 않음)
+        // employeeNumberInput.value = firstData.직원번호 || '';
+        // employeeNameInput.value = firstData.직원명 || '';
+        
+        // 기존 작성자 정보 표시
+        originalEmployeeNumberInput.value = firstData.직원번호 || '';
+        originalEmployeeNameInput.value = firstData.직원명 || '';
         
         // 모든 내용을 합쳐서 textarea에 로드
         const allContent = categoryData.map(item => item.내용).join('\n\n');
@@ -1342,8 +1366,12 @@ function loadTextareaToEditPanel(category) {
     } else {
         // 데이터가 없으면 카테고리만 선택
         contentTextarea.value = '';
-        employeeNumberInput.value = '';
-        employeeNameInput.value = '';
+        // 직원번호와 직원명은 현재 로그인한 사용자 정보로 유지 (변경하지 않음)
+        // employeeNumberInput.value = '';
+        // employeeNameInput.value = '';
+        // 기존 작성자 정보도 초기화
+        originalEmployeeNumberInput.value = '';
+        originalEmployeeNameInput.value = '';
         console.log(`${category} 카테고리 데이터 없음`);
     }
 }
