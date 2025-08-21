@@ -1,4 +1,5 @@
 // Supabase 클라이언트는 supabase.js에서 이미 초기화됨
+// supabaseClient 변수를 사용하여 Supabase에 접근
 
 // 전역 변수
 let currentDate = new Date().toISOString().split('T')[0].replace(/-/g, ''); // 오늘 날짜 (YYYYMMDD 형식)
@@ -1044,100 +1045,69 @@ async function loadEmployeeName(employeeNumber) {
     console.log('=== 직원명 로드 시작 ===');
     console.log('조회할 직원번호:', employeeNumber);
     
+    // Supabase 클라이언트 확인
+    if (!supabaseClient) {
+        console.error('Supabase 클라이언트가 초기화되지 않았습니다.');
+        return;
+    }
+    
     try {
-        // 먼저 테이블 구조와 데이터 확인
-        console.log('테이블 구조 확인 중...');
-        const { data: sampleData, error: sampleError } = await supabase
+        // 방법 1: 정확한 매칭으로 단일 행 조회
+        console.log('정확한 매칭으로 직원 조회 중...');
+        const { data: exactMatch, error: exactError } = await supabaseClient
             .from('employeesinfo')
-            .select('*')
-            .limit(5);
+            .select('직원명')
+            .eq('직원번호', employeeNumber)
+            .single();
         
-        console.log('샘플 데이터:', sampleData);
-        console.log('샘플 에러:', sampleError);
+        console.log('Supabase 쿼리 결과:');
+        console.log('- data:', exactMatch);
+        console.log('- error:', exactError);
         
-        if (sampleData && sampleData.length > 0) {
-            console.log('테이블 컬럼명:', Object.keys(sampleData[0]));
-            console.log('첫 번째 행:', sampleData[0]);
+        if (exactMatch && !exactError) {
+            employeeNameInput.value = exactMatch.직원명 || '';
+            console.log('직원명 설정 완료:', employeeNameInput.value);
+            return;
         }
         
-        // 방법 1: 모든 데이터를 가져와서 클라이언트에서 필터링
-        console.log('전체 직원 데이터 조회 중...');
-        const { data: allEmployees, error } = await supabase
+        // 방법 2: 대소문자 무시 매칭 (ilike 사용)
+        console.log('대소문자 무시 매칭으로 재시도 중...');
+        const { data: ilikeResult, error: ilikeError } = await supabaseClient
             .from('employeesinfo')
-            .select('*');
+            .select('직원명')
+            .ilike('직원번호', employeeNumber)
+            .limit(1);
         
-        console.log('전체 직원 데이터:', allEmployees);
-        console.log('조회 에러:', error);
+        console.log('ilike 쿼리 결과:');
+        console.log('- data:', ilikeResult);
+        console.log('- error:', ilikeError);
         
-        if (allEmployees && !error) {
-            console.log('전체 직원 수:', allEmployees.length);
-            
-            // 대소문자 구분 없이 직원번호 매칭 (상세 디버깅)
-            console.log('매칭 과정 상세:');
-            console.log('검색할 직원번호:', `"${employeeNumber}"`);
-            console.log('검색할 직원번호 길이:', employeeNumber.length);
-            console.log('검색할 직원번호 charCode:', Array.from(employeeNumber).map(c => c.charCodeAt(0)));
-            
-            const matchedEmployee = allEmployees.find(emp => {
-                if (!emp.직원번호) return false;
-                
-                const serverEmpNo = emp.직원번호;
-                const searchEmpNo = employeeNumber;
-                
-                console.log(`비교: "${serverEmpNo}" vs "${searchEmpNo}"`);
-                console.log(`길이: ${serverEmpNo.length} vs ${searchEmpNo.length}`);
-                console.log(`소문자 변환: "${serverEmpNo.toLowerCase()}" vs "${searchEmpNo.toLowerCase()}"`);
-                
-                // 방법 1: toLowerCase() 비교
-                const lowerMatch = serverEmpNo.toLowerCase() === searchEmpNo.toLowerCase();
-                console.log(`소문자 매칭 결과: ${lowerMatch}`);
-                
-                // 방법 2: 정확한 문자열 비교
-                const exactMatch = serverEmpNo === searchEmpNo;
-                console.log(`정확한 매칭 결과: ${exactMatch}`);
-                
-                // 방법 3: 대문자로 변환해서 비교
-                const upperMatch = serverEmpNo.toUpperCase() === searchEmpNo.toUpperCase();
-                console.log(`대문자 매칭 결과: ${upperMatch}`);
-                
-                // 방법 4: 정규식으로 대소문자 무시 비교
-                const regexMatch = new RegExp(`^${searchEmpNo}$`, 'i').test(serverEmpNo);
-                console.log(`정규식 매칭 결과: ${regexMatch}`);
-                
-                return lowerMatch || exactMatch || upperMatch || regexMatch;
-            });
-            
-            console.log('매칭된 직원:', matchedEmployee);
+        if (ilikeResult && ilikeResult.length > 0 && !ilikeError) {
+            employeeNameInput.value = ilikeResult[0].직원명 || '';
+            console.log('ilike로 직원명 설정 완료:', employeeNameInput.value);
+            return;
+        }
+        
+        // 방법 3: 전체 데이터를 가져와서 클라이언트에서 필터링
+        console.log('전체 데이터에서 클라이언트 필터링 중...');
+        const { data: allEmployees, error: allError } = await supabaseClient
+            .from('employeesinfo')
+            .select('직원번호, 직원명');
+        
+        if (allEmployees && !allError) {
+            const matchedEmployee = allEmployees.find(emp => 
+                emp.직원번호 && emp.직원번호.toLowerCase() === employeeNumber.toLowerCase()
+            );
             
             if (matchedEmployee) {
                 employeeNameInput.value = matchedEmployee.직원명 || '';
-                console.log('직원명 설정 완료:', employeeNameInput.value);
-            } else {
-                console.log('해당 직원번호를 찾을 수 없음');
-                console.log('검색한 직원번호:', employeeNumber);
-                console.log('서버의 직원번호들:', allEmployees.map(emp => emp.직원번호));
-                
-                // 방법 2: 대안으로 ilike 사용 (대소문자 무시)
-                console.log('ilike로 재시도 중...');
-                const { data: ilikeResult, error: ilikeError } = await supabase
-                    .from('employeesinfo')
-                    .select('*')
-                    .ilike('직원번호', employeeNumber);
-                
-                console.log('ilike 결과:', ilikeResult);
-                console.log('ilike 에러:', ilikeError);
-                
-                if (ilikeResult && ilikeResult.length > 0) {
-                    employeeNameInput.value = ilikeResult[0].직원명 || '';
-                    console.log('ilike로 직원명 설정 완료:', employeeNameInput.value);
-                }
-            }
-        } else {
-            console.log('직원 데이터 조회 실패');
-            if (error) {
-                console.log('에러 상세:', error);
+                console.log('클라이언트 필터링으로 직원명 설정 완료:', employeeNameInput.value);
+                return;
             }
         }
+        
+        console.log('직원명 조회 실패 또는 데이터 없음');
+        
     } catch (error) {
         console.log('직원명 로드 실패:', error);
         console.log('에러 상세:', error.message);
