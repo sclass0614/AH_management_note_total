@@ -891,6 +891,7 @@ window.confirm = customConfirm;
 function loadEmployeeNumberFromURL() {
     console.log('=== 직원번호 로드 시작 ===');
     let employeeNumber = null;
+    let urlHasEmployeeNumber = false;
     
     // 1. URL 파라미터에서 확인 (empNo 파라미터)
     const urlParams = new URLSearchParams(window.location.search);
@@ -898,10 +899,16 @@ function loadEmployeeNumberFromURL() {
     const employeeNumberFromURL = urlParams.get('employeeNumber');
     employeeNumber = empNoFromURL || employeeNumberFromURL;
     
+    // URL에서 직원번호를 가져왔는지 확인
+    if (empNoFromURL || employeeNumberFromURL) {
+        urlHasEmployeeNumber = true;
+    }
+    
     console.log('URL 파라미터 확인:');
     console.log('- empNo:', empNoFromURL);
     console.log('- employeeNumber:', employeeNumberFromURL);
     console.log('- 최종 URL 결과:', employeeNumber);
+    console.log('- URL에서 직원번호 가져옴:', urlHasEmployeeNumber);
     
     // 2. sessionStorage에서 확인
     if (!employeeNumber) {
@@ -956,11 +963,41 @@ function loadEmployeeNumberFromURL() {
         // 직원번호가 있으면 직원명도 자동으로 가져오기
         loadEmployeeName(employeeNumber);
         
+        // URL에서 직원번호를 가져왔다면 URL 정리 (보안)
+        if (urlHasEmployeeNumber) {
+            cleanURLFromEmployeeNumber();
+        }
+        
         console.log('직원번호 자동 설정 완료:', employeeNumber);
     } else {
         console.log('❌ 직원번호를 찾을 수 없습니다!');
         console.log('현재 URL:', window.location.href);
         console.log('현재 페이지 제목:', document.title);
+    }
+}
+
+// URL에서 직원번호 파라미터 제거 (보안)
+function cleanURLFromEmployeeNumber() {
+    try {
+        const currentURL = new URL(window.location.href);
+        const searchParams = currentURL.searchParams;
+        
+        // 직원번호 관련 파라미터 제거
+        searchParams.delete('empNo');
+        searchParams.delete('employeeNumber');
+        
+        // 새로운 URL 생성
+        const newURL = currentURL.origin + currentURL.pathname;
+        const newSearchParams = searchParams.toString();
+        const finalURL = newSearchParams ? `${newURL}?${newSearchParams}` : newURL;
+        
+        // 브라우저 히스토리 업데이트 (페이지 새로고침 없이)
+        window.history.replaceState({}, document.title, finalURL);
+        
+        console.log('URL에서 직원번호 파라미터 제거 완료');
+        console.log('새로운 URL:', finalURL);
+    } catch (error) {
+        console.log('URL 정리 중 오류:', error);
     }
 }
 
@@ -970,25 +1007,40 @@ async function loadEmployeeName(employeeNumber) {
     console.log('조회할 직원번호:', employeeNumber);
     
     try {
-        // employeesinfo 테이블에서 직원명 조회
-        const { data: employeeData, error } = await supabase
+        // 대소문자 구분 없이 조회하기 위해 모든 데이터를 가져온 후 필터링
+        console.log('대소문자 구분 없이 조회 중...');
+        const { data: allEmployees, error } = await supabase
             .from('employeesinfo')
-            .select('직원명')
-            .eq('직원번호', employeeNumber)
-            .single();
+            .select('*');
         
-        console.log('Supabase 쿼리 결과:');
-        console.log('- data:', employeeData);
-        console.log('- error:', error);
+        console.log('전체 직원 데이터:', allEmployees);
+        console.log('조회 에러:', error);
         
-        if (employeeData && !error) {
-            employeeNameInput.value = employeeData.직원명 || '';
-            console.log('직원명 설정 완료:', employeeNameInput.value);
+        if (allEmployees && !error) {
+            // 대소문자 구분 없이 직원번호 매칭
+            const matchedEmployee = allEmployees.find(emp => 
+                emp.직원번호 && emp.직원번호.toLowerCase() === employeeNumber.toLowerCase()
+            );
+            
+            console.log('매칭된 직원:', matchedEmployee);
+            
+            if (matchedEmployee) {
+                employeeNameInput.value = matchedEmployee.직원명 || '';
+                console.log('직원명 설정 완료:', employeeNameInput.value);
+            } else {
+                console.log('해당 직원번호를 찾을 수 없음');
+                console.log('검색한 직원번호:', employeeNumber);
+                console.log('서버의 직원번호들:', allEmployees.map(emp => emp.직원번호));
+            }
         } else {
-            console.log('직원명 조회 실패 또는 데이터 없음');
+            console.log('직원 데이터 조회 실패');
+            if (error) {
+                console.log('에러 상세:', error);
+            }
         }
     } catch (error) {
         console.log('직원명 로드 실패:', error);
+        console.log('에러 상세:', error.message);
     }
     
     console.log('=== 직원명 로드 완료 ===');
