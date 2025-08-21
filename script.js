@@ -41,9 +41,15 @@ const restDayListCell = document.getElementById('restDayListCell');
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== 페이지 로드 시작 ===');
+    console.log('현재 URL:', window.location.href);
+    console.log('페이지 제목:', document.title);
+    
     initializePage();
     loadEmployeeNumberFromURL(); // URL에서 직원번호 로드
     setupPostMessageListener(); // PostMessage 리스너 설정
+    
+    console.log('=== 페이지 로드 완료 ===');
 });
 
 // 페이지 초기화
@@ -883,47 +889,86 @@ window.confirm = customConfirm;
 
 // 직원번호 가져오기 (모든 방법 지원)
 function loadEmployeeNumberFromURL() {
+    console.log('=== 직원번호 로드 시작 ===');
     let employeeNumber = null;
     
     // 1. URL 파라미터에서 확인 (empNo 파라미터)
     const urlParams = new URLSearchParams(window.location.search);
-    employeeNumber = urlParams.get('empNo') || urlParams.get('employeeNumber');
+    const empNoFromURL = urlParams.get('empNo');
+    const employeeNumberFromURL = urlParams.get('employeeNumber');
+    employeeNumber = empNoFromURL || employeeNumberFromURL;
+    
+    console.log('URL 파라미터 확인:');
+    console.log('- empNo:', empNoFromURL);
+    console.log('- employeeNumber:', employeeNumberFromURL);
+    console.log('- 최종 URL 결과:', employeeNumber);
     
     // 2. sessionStorage에서 확인
     if (!employeeNumber) {
-        employeeNumber = sessionStorage.getItem('empNo') || 
-                        sessionStorage.getItem('currentUser') || 
-                        sessionStorage.getItem('userInfo');
+        const empNoFromSession = sessionStorage.getItem('empNo');
+        const currentUserFromSession = sessionStorage.getItem('currentUser');
+        const userInfoFromSession = sessionStorage.getItem('userInfo');
+        
+        employeeNumber = empNoFromSession || currentUserFromSession || userInfoFromSession;
+        
+        console.log('sessionStorage 확인:');
+        console.log('- empNo:', empNoFromSession);
+        console.log('- currentUser:', currentUserFromSession);
+        console.log('- userInfo:', userInfoFromSession);
+        console.log('- 최종 sessionStorage 결과:', employeeNumber);
     }
     
     // 3. localStorage에서 확인
     if (!employeeNumber) {
-        employeeNumber = localStorage.getItem('employeeNumber');
+        const employeeNumberFromLocal = localStorage.getItem('employeeNumber');
+        employeeNumber = employeeNumberFromLocal;
+        
+        console.log('localStorage 확인:');
+        console.log('- employeeNumber:', employeeNumberFromLocal);
+        console.log('- 최종 localStorage 결과:', employeeNumber);
     }
     
     // 4. userInfo 요소에서 확인
     if (!employeeNumber) {
         const userInfoElement = document.getElementById('userInfo');
+        console.log('userInfo 요소 확인:');
+        console.log('- userInfo 요소 존재:', !!userInfoElement);
+        
         if (userInfoElement) {
             const userInfoText = userInfoElement.textContent;
+            console.log('- userInfo 텍스트:', userInfoText);
+            
             const match = userInfoText.match(/([A-Za-z0-9]+)\s*님/);
+            console.log('- 정규식 매치 결과:', match);
+            
             employeeNumber = match ? match[1].toLowerCase() : null;
+            console.log('- userInfo에서 추출한 직원번호:', employeeNumber);
         }
     }
+    
+    console.log('=== 최종 직원번호 결과:', employeeNumber, '===');
     
     if (employeeNumber) {
         // 직원번호 입력필드에 설정
         employeeNumberInput.value = employeeNumber;
+        console.log('직원번호 입력필드에 설정됨:', employeeNumberInput.value);
         
         // 직원번호가 있으면 직원명도 자동으로 가져오기
         loadEmployeeName(employeeNumber);
         
         console.log('직원번호 자동 설정 완료:', employeeNumber);
+    } else {
+        console.log('❌ 직원번호를 찾을 수 없습니다!');
+        console.log('현재 URL:', window.location.href);
+        console.log('현재 페이지 제목:', document.title);
     }
 }
 
 // 직원번호로 직원명 가져오기 (선택사항)
 async function loadEmployeeName(employeeNumber) {
+    console.log('=== 직원명 로드 시작 ===');
+    console.log('조회할 직원번호:', employeeNumber);
+    
     try {
         // employeesinfo 테이블에서 직원명 조회
         const { data: employeeData, error } = await supabase
@@ -932,20 +977,36 @@ async function loadEmployeeName(employeeNumber) {
             .eq('직원번호', employeeNumber)
             .single();
         
+        console.log('Supabase 쿼리 결과:');
+        console.log('- data:', employeeData);
+        console.log('- error:', error);
+        
         if (employeeData && !error) {
             employeeNameInput.value = employeeData.직원명 || '';
+            console.log('직원명 설정 완료:', employeeNameInput.value);
+        } else {
+            console.log('직원명 조회 실패 또는 데이터 없음');
         }
     } catch (error) {
         console.log('직원명 로드 실패:', error);
     }
+    
+    console.log('=== 직원명 로드 완료 ===');
 }
 
 // PostMessage 통신 설정
 function setupPostMessageListener() {
+    console.log('=== PostMessage 리스너 설정 시작 ===');
+    
     // PostMessage로 직원번호 요청
     window.addEventListener('message', function(event) {
+        console.log('PostMessage 수신:', event.data);
+        
         if (event.data && event.data.type === 'requestUserInfo') {
+            console.log('직원번호 요청 메시지 수신');
             const currentUserEmpNo = getCurrentEmployeeNumber();
+            console.log('현재 직원번호:', currentUserEmpNo);
+            
             if (currentUserEmpNo) {
                 event.source.postMessage({
                     type: 'userInfo',
@@ -955,13 +1016,25 @@ function setupPostMessageListener() {
                 }, '*');
                 console.log('PostMessage로 직원번호 전송:', currentUserEmpNo);
             }
+        } else if (event.data && event.data.type === 'userInfo') {
+            console.log('직원번호 정보 수신:', event.data);
+            if (event.data.empNo) {
+                console.log('PostMessage로 받은 직원번호:', event.data.empNo);
+                employeeNumberInput.value = event.data.empNo;
+                loadEmployeeName(event.data.empNo);
+            }
         }
     });
     
     // 부모 창에 직원번호 요청
     if (window.opener) {
+        console.log('부모 창 존재, 직원번호 요청 전송');
         window.opener.postMessage({ type: 'requestUserInfo' }, '*');
+    } else {
+        console.log('부모 창 없음 (window.opener가 null)');
     }
+    
+    console.log('=== PostMessage 리스너 설정 완료 ===');
 }
 
 // 현재 직원번호 가져오기
