@@ -297,6 +297,10 @@ body {
 .report-table td:nth-child(4) {
     width: 62%;
     /* min-width: 200px; */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    vertical-align: top;
 }
 
 /* 우측: 편집 패널 */
@@ -1032,15 +1036,23 @@ body {
         font-size: 1.2rem !important;
     }
     
-    .report-table th,
-    .report-table td {
-        border: 1px solid #000 !important;
-        background-color: white !important;
-        padding: 6px 8px !important;
-        text-align: left !important;
-        vertical-align: top !important;
-        font-size: 1.2rem !important;
-    }
+         .report-table th,
+     .report-table td {
+         border: 1px solid #000 !important;
+         background-color: white !important;
+         padding: 6px 8px !important;
+         text-align: left !important;
+         vertical-align: top !important;
+         font-size: 1.2rem !important;
+     }
+     
+     /* 개인업무일지 테이블의 개인업무 셀 줄바꿈 처리 */
+     .report-table td:nth-child(4) {
+         white-space: pre-wrap !important;
+         word-wrap: break-word !important;
+         word-break: break-word !important;
+         vertical-align: top !important;
+     }
     
     .report-table th {
         background-color: #f0f0f0 !important;

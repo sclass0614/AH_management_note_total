@@ -576,7 +576,7 @@ function updateIndividualWorkTable() {
             <td rowspan="${workCount}">${group.담당직종 || ''}</td>
             <td rowspan="${workCount}">${group.직원번호 || ''}</td>
             <td rowspan="${workCount}">${group.직원명 || ''}</td>
-            <td>${group.업무내용들[0] || ''}</td>
+            <td style="white-space: pre-wrap; word-wrap: break-word; word-break: break-word;">${group.업무내용들[0] || ''}</td>
         `;
         individualWorkTableBody.appendChild(firstRow);
         
@@ -584,7 +584,7 @@ function updateIndividualWorkTable() {
         for (let i = 1; i < group.업무내용들.length; i++) {
             const additionalRow = document.createElement('tr');
             additionalRow.innerHTML = `
-                <td>${group.업무내용들[i]}</td>
+                <td style="white-space: pre-wrap; word-wrap: break-word; word-break: break-word;">${group.업무내용들[i]}</td>
             `;
             individualWorkTableBody.appendChild(additionalRow);
         }
