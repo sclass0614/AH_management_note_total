@@ -9,7 +9,6 @@ let employeesInfoData = []; // employeesinfo 데이터
 let originalData = null; // 카테고리 선택 시 원본 데이터 저장 (동시 편집 충돌 방지용)
 let attendanceData = []; // activities_journal 데이터 (이용인원)
 let membersInfoData = []; // membersinfo 데이터 (전체 회원 정보)
-let isFirstLoad = true; // 페이지 첫 로드 여부 확인 플래그
 
 // DOM 요소들
 const datePicker = document.getElementById('datePicker');
@@ -47,28 +46,30 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('현재 URL:', window.location.href);
     console.log('페이지 제목:', document.title);
     
+    // 1단계: 페이지 초기화
     initializePage();
-    loadEmployeeNumberFromURL(); // URL에서 직원번호 로드
-    setupPostMessageListener(); // PostMessage 리스너 설정
+    
+    // 2단계: PostMessage 리스너 설정
+    setupPostMessageListener();
+    
+    // 3단계: 페이지 초기화 완료 후 직원번호 로드 (비동기로 처리)
+    setTimeout(() => {
+        console.log('=== 직원번호 로드 시작 (초기화 완료 후) ===');
+        loadEmployeeNumberFromURL();
+    }, 100);
     
     console.log('=== 페이지 로드 완료 ===');
-    
-    // 페이지 새로고침/종료 시 직원 정보 초기화
-    window.addEventListener('beforeunload', function() {
-        console.log('페이지 새로고침/닫기 감지 - 직원 정보 초기화');
-        // 모든 저장소에서 직원 정보 제거
-        sessionStorage.removeItem('empNo');
-        sessionStorage.removeItem('currentUser');
-        sessionStorage.removeItem('userInfo');
-        localStorage.removeItem('employeeNumber');
-        
-        // 첫 로드 플래그를 false로 설정하여 다음 방문 시 초기화되도록 함
-        isFirstLoad = false;
-    });
 });
 
 // 페이지 초기화
 function initializePage() {
+    console.log('=== 페이지 초기화 시작 ===');
+    
+    // 직원번호 입력 필드 초기화
+    employeeNumberInput.value = '';
+    employeeNameInput.value = '';
+    console.log('직원번호 입력 필드 초기화 완료');
+    
     // 오늘 날짜로 date picker 설정 (YYYY-MM-DD 형식)
     const today = new Date().toISOString().split('T')[0];
     datePicker.value = today;
@@ -81,6 +82,8 @@ function initializePage() {
     
     // 초기 데이터 로드
     loadReportData();
+    
+    console.log('=== 페이지 초기화 완료 ===');
 }
 
 // 이벤트 리스너 설정
@@ -142,9 +145,6 @@ function setupEventListeners() {
     
     // text-area 더블클릭 이벤트 설정
     setupTextareaDoubleClickEvents();
-    
-    // 직원번호 입력 시 실시간 검증
-    setupEmployeeNumberValidation();
 }
 
 // 보고서 날짜 업데이트
@@ -612,12 +612,14 @@ async function submitData() {
     // 카테고리 선택 확인
     if (!category) {
         await customAlert('카테고리를 먼저 선택해주세요.', '카테고리 선택');
+        categorySelect.focus();
         return;
     }
     
     // 내용 입력 확인
     if (!content) {
         await customAlert('내용을 입력해주세요.', '내용 입력');
+        contentTextarea.focus();
         return;
     }
     
@@ -982,16 +984,13 @@ function customConfirm(message, title = '확인') {
 window.alert = customAlert;
 window.confirm = customConfirm;
 
-// 직원번호 가져오기 (첫 로드 시에만)
+// 직원번호 가져오기 (모든 방법 지원)
 function loadEmployeeNumberFromURL() {
     console.log('=== 직원번호 로드 시작 ===');
-    console.log('첫 로드 여부:', isFirstLoad);
     
-    // 첫 로드가 아닌 경우 (새로고침 등) 직원 정보 초기화
-    if (!isFirstLoad) {
-        console.log('새로고침/재방문 감지 - 직원 정보 초기화');
-        employeeNumberInput.value = '';
-        employeeNameInput.value = '';
+    // 입력 필드가 준비되었는지 확인
+    if (!employeeNumberInput || !employeeNameInput) {
+        console.error('직원번호 입력 필드가 준비되지 않았습니다.');
         return;
     }
     
@@ -1080,8 +1079,7 @@ function loadEmployeeNumberFromURL() {
         console.log('현재 페이지 제목:', document.title);
     }
     
-    // 첫 로드 플래그를 false로 변경
-    isFirstLoad = false;
+    console.log('=== 직원번호 로드 완료 ===');
 }
 
 // URL에서 직원번호 파라미터 제거 (보안)
