@@ -142,6 +142,9 @@ function setupEventListeners() {
     
     // text-area 더블클릭 이벤트 설정
     setupTextareaDoubleClickEvents();
+    
+    // 직원번호 입력 시 실시간 검증
+    setupEmployeeNumberValidation();
 }
 
 // 보고서 날짜 업데이트
@@ -598,6 +601,13 @@ async function submitData() {
     const employeeName = employeeNameInput.value.trim();
     const category = categorySelect.value;
     const content = contentTextarea.value.trim();
+    
+    // 직원번호 입력 확인
+    if (!employeeNumber) {
+        await customAlert('직원번호를 입력해주세요.', '직원번호 입력');
+        employeeNumberInput.focus();
+        return;
+    }
     
     // 카테고리 선택 확인
     if (!category) {
