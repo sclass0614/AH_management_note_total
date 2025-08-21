@@ -112,20 +112,29 @@ function setupEventListeners() {
     // 카테고리 변경 시
     categorySelect.addEventListener('change', function() {
         if (this.value) {
+            // 현재 입력된 직원번호와 직원명을 임시 저장
+            const currentEmployeeNumber = employeeNumberInput.value;
+            const currentEmployeeName = employeeNameInput.value;
+            
             // 카테고리가 선택되면 해당 카테고리의 첫 번째 데이터에서 직원 정보 가져오기
             const categoryData = managementNoteData.filter(item => item.카테고리 === this.value);
             if (categoryData.length > 0) {
                 const firstData = categoryData[0];
-                employeeNumberInput.value = firstData.직원번호 || '';
-                employeeNameInput.value = firstData.직원명 || '';
+                // 기존 데이터에 직원 정보가 있으면 사용, 없으면 현재 입력된 값 유지
+                employeeNumberInput.value = firstData.직원번호 || currentEmployeeNumber || '';
+                employeeNameInput.value = firstData.직원명 || currentEmployeeName || '';
+            } else {
+                // 해당 카테고리에 데이터가 없으면 현재 입력된 직원 정보 유지
+                employeeNumberInput.value = currentEmployeeNumber;
+                employeeNameInput.value = currentEmployeeName;
             }
+            
             // 해당 카테고리의 모든 내용을 textarea에 로드
             loadCategoryContent(this.value);
         } else {
-            // 카테고리가 선택되지 않으면 내용을 비움
+            // 카테고리가 선택되지 않으면 내용만 비움 (직원 정보는 유지)
             contentTextarea.value = '';
-            employeeNumberInput.value = '';
-            employeeNameInput.value = '';
+            // 직원번호와 직원명은 유지 (초기화하지 않음)
         }
     });
     
