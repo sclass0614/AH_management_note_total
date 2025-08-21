@@ -137,11 +137,17 @@ function updateReportDate() {
 // Supabase에서 데이터 로드
 async function loadReportData() {
     try {
+        // Supabase 클라이언트 확인
+        if (!supabaseClient) {
+            console.error('Supabase 클라이언트가 초기화되지 않았습니다.');
+            return;
+        }
+        
         console.log('데이터 로딩 시작...');
         console.log('현재 날짜 (YYYYMMDD):', currentDate);
         
         // management_note_total 데이터 로드
-        const { data: totalData, error: totalError } = await supabase
+        const { data: totalData, error: totalError } = await supabaseClient
             .from('management_note_total')
             .select('*')
             .eq('날짜', currentDate);
@@ -155,7 +161,7 @@ async function loadReportData() {
         console.log('management_note_total 데이터:', managementNoteData);
         
         // management_note_individual 데이터 로드
-        const { data: individualData, error: individualError } = await supabase
+        const { data: individualData, error: individualError } = await supabaseClient
             .from('management_note_individual')
             .select('*')
             .eq('날짜', currentDate);
@@ -169,7 +175,7 @@ async function loadReportData() {
         console.log('management_note_individual 데이터:', individualWorkData);
         
         // employeesinfo 데이터 로드
-        const { data: employeesData, error: employeesError } = await supabase
+        const { data: employeesData, error: employeesError } = await supabaseClient
             .from('employeesinfo')
             .select('직원번호, 담당직종');
         
@@ -182,7 +188,7 @@ async function loadReportData() {
         console.log('employeesinfo 데이터:', employeesInfoData);
         
         // activities_journal 데이터 로드 (이용인원)
-        const { data: attendanceDataResult, error: attendanceError } = await supabase
+        const { data: attendanceDataResult, error: attendanceError } = await supabaseClient
             .from('activities_journal')
             .select('회원번호, 회원명')
             .eq('날짜', currentDate);
@@ -199,7 +205,7 @@ async function loadReportData() {
         console.log('=== membersinfo 데이터 로드 시작 ===');
         console.log('조회할 날짜:', currentDate);
         
-        const { data: membersData, error: membersError } = await supabase
+        const { data: membersData, error: membersError } = await supabaseClient
             .from('membersinfo')
             .select('회원번호, 회원명, 입소일, 퇴소일');
         
@@ -533,19 +539,17 @@ function loadCategoryContent(category) {
     if (categoryData.length > 0) {
         const firstData = categoryData[0];
         contentTextarea.value = firstData.내용 || '';
-        // 기존 데이터의 ID를 저장 (업데이트용)
-        contentTextarea.dataset.existingId = firstData.id;
         
-        // 원본 데이터 저장 (동시 편집 충돌 방지용)
+        // 원본 데이터 저장 (동시 편집 충돌 방지용) - 날짜와 카테고리 기준으로 변경
         originalData = {
-            id: firstData.id,
+            날짜: currentDate,
+            카테고리: category,
             직원번호: firstData.직원번호 || '',
             직원명: firstData.직원명 || '',
             내용: firstData.내용 || ''
         };
     } else {
         contentTextarea.value = '';
-        contentTextarea.dataset.existingId = '';
         originalData = null;
     }
     
@@ -555,12 +559,18 @@ function loadCategoryContent(category) {
 
 // 데이터 입력 처리
 async function submitData() {
+    // Supabase 클라이언트 확인
+    if (!supabaseClient) {
+        console.error('Supabase 클라이언트가 초기화되지 않았습니다.');
+        await customAlert('데이터베이스 연결에 문제가 있습니다.', '오류');
+        return;
+    }
+    
     // 입력값 검증
     const employeeNumber = employeeNumberInput.value.trim();
     const employeeName = employeeNameInput.value.trim();
     const category = categorySelect.value;
     const content = contentTextarea.value.trim();
-    const existingId = contentTextarea.dataset.existingId;
     
     if (!category || !content) {
         await customAlert('카테고리와 내용을 입력해주세요.', '입력 확인');
@@ -570,39 +580,43 @@ async function submitData() {
     try {
         let result;
         
-        if (existingId) {
-            // 기존 데이터가 있으면 서버의 최신 데이터 확인
-            console.log('기존 데이터 업데이트:', existingId);
+        // 날짜와 카테고리로 기존 데이터 확인
+        console.log('날짜와 카테고리로 기존 데이터 확인:', currentDate, category);
+        
+        const { data: existingData, error: fetchError } = await supabaseClient
+            .from('management_note_total')
+            .select('*')
+            .eq('날짜', currentDate)
+            .eq('카테고리', category)
+            .single();
+        
+        if (fetchError && fetchError.code !== 'PGRST116') {
+            console.error('기존 데이터 조회 에러:', fetchError);
+            await customAlert('데이터 조회 중 오류가 발생했습니다.', '오류');
+            return;
+        }
+        
+        if (existingData) {
+            // 기존 데이터가 있으면 업데이트
+            console.log('기존 데이터 업데이트:', existingData.id);
             
-            // 서버에서 최신 데이터 가져오기
-            const { data: serverData, error: fetchError } = await supabase
-                .from('management_note_total')
-                .select('*')
-                .eq('id', existingId)
-                .single();
-            
-            if (fetchError) {
-                console.error('서버 데이터 조회 에러:', fetchError);
-                await customAlert('서버 데이터 조회 중 오류가 발생했습니다.', '오류');
-                return;
-            }
-            
-            // 원본 데이터와 서버 데이터 비교
-            if (originalData && serverData.내용 !== originalData.내용) {
+            // 원본 데이터와 서버 데이터 비교 (충돌 방지)
+            if (originalData && existingData.내용 !== originalData.내용) {
                 // 다른 사용자가 수정한 경우 모달 표시
-                showConflictModal(serverData);
+                showConflictModal(existingData);
                 return;
             }
             
             // 충돌이 없으면 업데이트 진행
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('management_note_total')
                 .update({
                     직원번호: employeeNumber,
                     직원명: employeeName,
                     내용: content
                 })
-                .eq('id', existingId);
+                .eq('날짜', currentDate)
+                .eq('카테고리', category);
             
             if (error) {
                 console.error('데이터 업데이트 에러:', error);
@@ -615,7 +629,7 @@ async function submitData() {
         } else {
             // 새 데이터 삽입
             console.log('새 데이터 삽입');
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('management_note_total')
                 .insert([
                     {
@@ -644,7 +658,7 @@ async function submitData() {
         await loadReportData();
         
         await customAlert(
-            existingId ? '데이터가 성공적으로 업데이트되었습니다.' : '데이터가 성공적으로 입력되었습니다.',
+            existingData ? '데이터가 성공적으로 업데이트되었습니다.' : '데이터가 성공적으로 입력되었습니다.',
             '완료'
         );
         
@@ -727,17 +741,18 @@ async function forceUpdate() {
     const employeeNumber = employeeNumberInput.value.trim();
     const employeeName = employeeNameInput.value.trim();
     const content = contentTextarea.value.trim();
-    const existingId = contentTextarea.dataset.existingId;
+    const category = categorySelect.value;
     
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('management_note_total')
             .update({
                 직원번호: employeeNumber,
                 직원명: employeeName,
                 내용: content
             })
-            .eq('id', existingId);
+            .eq('날짜', currentDate)
+            .eq('카테고리', category);
         
         if (error) {
             console.error('강제 업데이트 에러:', error);
@@ -775,8 +790,6 @@ function clearForm() {
     employeeNameInput.value = '';
     categorySelect.value = '';
     contentTextarea.value = '';
-    // 기존 데이터 ID 초기화
-    contentTextarea.dataset.existingId = '';
     // 원본 데이터 초기화
     originalData = null;
     // textarea 높이 초기화
@@ -999,13 +1012,13 @@ function loadEmployeeNumberFromURL() {
         employeeNumberInput.value = employeeNumber;
         console.log('직원번호 입력필드에 설정됨:', employeeNumberInput.value);
         
-        // 직원번호가 있으면 직원명도 자동으로 가져오기
-        loadEmployeeName(employeeNumber);
-        
-        // URL에서 직원번호를 가져왔다면 URL 정리 (보안)
+        // URL에서 직원번호를 가져왔다면 URL 정리 (보안) - 직원명 조회와 독립적으로 실행
         if (urlHasEmployeeNumber) {
             cleanURLFromEmployeeNumber();
         }
+        
+        // 직원번호가 있으면 직원명도 자동으로 가져오기 (비동기로 실행)
+        loadEmployeeName(employeeNumber);
         
         console.log('직원번호 자동 설정 완료:', employeeNumber);
     } else {

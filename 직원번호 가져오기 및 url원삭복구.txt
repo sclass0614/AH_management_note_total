@@ -1,0 +1,181 @@
+===========================================
+URL에서 직원번호 가져오기 및 URL 원상복귀 코드
+===========================================
+
+1. URL에서 직원번호 가져오기 함수
+===========================================
+
+// 직원번호 가져오기 (모든 방법 지원)
+function loadEmployeeNumberFromURL() {
+    console.log('=== 직원번호 로드 시작 ===');
+    let employeeNumber = null;
+    let urlHasEmployeeNumber = false;
+    
+    // 1. URL 파라미터에서 확인 (empNo 파라미터)
+    const urlParams = new URLSearchParams(window.location.search);
+    const empNoFromURL = urlParams.get('empNo');
+    const employeeNumberFromURL = urlParams.get('employeeNumber');
+    employeeNumber = empNoFromURL || employeeNumberFromURL;
+    
+    // URL에서 직원번호를 가져왔는지 확인
+    if (empNoFromURL || employeeNumberFromURL) {
+        urlHasEmployeeNumber = true;
+    }
+    
+    console.log('URL 파라미터 확인:');
+    console.log('- empNo:', empNoFromURL);
+    console.log('- employeeNumber:', employeeNumberFromURL);
+    console.log('- 최종 URL 결과:', employeeNumber);
+    console.log('- URL에서 직원번호 가져옴:', urlHasEmployeeNumber);
+    
+    // 2. sessionStorage에서 확인
+    if (!employeeNumber) {
+        const empNoFromSession = sessionStorage.getItem('empNo');
+        const currentUserFromSession = sessionStorage.getItem('currentUser');
+        const userInfoFromSession = sessionStorage.getItem('userInfo');
+        
+        employeeNumber = empNoFromSession || currentUserFromSession || userInfoFromSession;
+        
+        console.log('sessionStorage 확인:');
+        console.log('- empNo:', empNoFromSession);
+        console.log('- currentUser:', currentUserFromSession);
+        console.log('- userInfo:', userInfoFromSession);
+        console.log('- 최종 sessionStorage 결과:', employeeNumber);
+    }
+    
+    // 3. localStorage에서 확인
+    if (!employeeNumber) {
+        const employeeNumberFromLocal = localStorage.getItem('employeeNumber');
+        employeeNumber = employeeNumberFromLocal;
+        
+        console.log('localStorage 확인:');
+        console.log('- employeeNumber:', employeeNumberFromLocal);
+        console.log('- 최종 localStorage 결과:', employeeNumber);
+    }
+    
+    // 4. userInfo 요소에서 확인
+    if (!employeeNumber) {
+        const userInfoElement = document.getElementById('userInfo');
+        console.log('userInfo 요소 확인:');
+        console.log('- userInfo 요소 존재:', !!userInfoElement);
+        
+        if (userInfoElement) {
+            const userInfoText = userInfoElement.textContent;
+            console.log('- userInfo 텍스트:', userInfoText);
+            
+            const match = userInfoText.match(/([A-Za-z0-9]+)\s*님/);
+            console.log('- 정규식 매치 결과:', match);
+            
+            employeeNumber = match ? match[1].toLowerCase() : null;
+            console.log('- userInfo에서 추출한 직원번호:', employeeNumber);
+        }
+    }
+    
+    console.log('=== 최종 직원번호 결과:', employeeNumber, '===');
+    
+    if (employeeNumber) {
+        // 직원번호 입력필드에 설정
+        employeeNumberInput.value = employeeNumber;
+        console.log('직원번호 입력필드에 설정됨:', employeeNumberInput.value);
+        
+        // 직원번호가 있으면 직원명도 자동으로 가져오기
+        loadEmployeeName(employeeNumber);
+        
+        // URL에서 직원번호를 가져왔다면 URL 정리 (보안)
+        if (urlHasEmployeeNumber) {
+            cleanURLFromEmployeeNumber();
+        }
+        
+        console.log('직원번호 자동 설정 완료:', employeeNumber);
+    } else {
+        console.log('❌ 직원번호를 찾을 수 없습니다!');
+        console.log('현재 URL:', window.location.href);
+        console.log('현재 페이지 제목:', document.title);
+    }
+}
+
+2. URL에서 직원번호 파라미터 제거 함수
+===========================================
+
+// URL에서 직원번호 파라미터 제거 (보안)
+function cleanURLFromEmployeeNumber() {
+    try {
+        const currentURL = new URL(window.location.href);
+        const searchParams = currentURL.searchParams;
+        
+        // 직원번호 관련 파라미터 제거
+        searchParams.delete('empNo');
+        searchParams.delete('employeeNumber');
+        
+        // 새로운 URL 생성
+        const newURL = currentURL.origin + currentURL.pathname;
+        const newSearchParams = searchParams.toString();
+        const finalURL = newSearchParams ? `${newURL}?${newSearchParams}` : newURL;
+        
+        // 브라우저 히스토리 업데이트 (페이지 새로고침 없이)
+        window.history.replaceState({}, document.title, finalURL);
+        
+        console.log('URL에서 직원번호 파라미터 제거 완료');
+        console.log('새로운 URL:', finalURL);
+    } catch (error) {
+        console.log('URL 정리 중 오류:', error);
+    }
+}
+
+3. 페이지 로드 시 호출
+===========================================
+
+// 페이지 로드 시 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== 페이지 로드 시작 ===');
+    console.log('현재 URL:', window.location.href);
+    console.log('페이지 제목:', document.title);
+    
+    initializePage();
+    loadEmployeeNumberFromURL(); // URL에서 직원번호 로드
+    setupPostMessageListener(); // PostMessage 리스너 설정
+    
+    console.log('=== 페이지 로드 완료 ===');
+});
+
+4. 주요 기능 설명
+===========================================
+
+loadEmployeeNumberFromURL() 함수:
+- URL 파라미터 확인: empNo 또는 employeeNumber 파라미터에서 직원번호 추출
+- 다양한 저장소 확인: sessionStorage, localStorage, userInfo 요소에서 직원번호 찾기
+- 우선순위: URL → sessionStorage → localStorage → userInfo 요소 순서로 확인
+- 자동 설정: 찾은 직원번호를 입력필드에 설정하고 직원명도 자동으로 가져오기
+- URL 정리: URL에서 직원번호를 가져왔다면 보안을 위해 URL에서 파라미터 제거
+
+cleanURLFromEmployeeNumber() 함수:
+- 현재 URL 파싱: URL 객체를 사용하여 현재 URL 분석
+- 파라미터 제거: empNo와 employeeNumber 파라미터 삭제
+- 새 URL 생성: 파라미터가 제거된 새로운 URL 생성
+- 히스토리 업데이트: window.history.replaceState()를 사용하여 페이지 새로고침 없이 URL 변경
+
+5. 사용 예시
+===========================================
+
+이전 페이지에서 URL로 직원번호 전달:
+```javascript
+// 이전 페이지에서
+const employeeNumber = 's25001';
+const targetURL = `https://your-domain.com/index.html?empNo=${employeeNumber}`;
+window.location.href = targetURL;
+```
+
+URL 변화:
+- 변경 전: https://your-domain.com/index.html?empNo=s25001
+- 변경 후: https://your-domain.com/index.html
+
+6. 보안 고려사항
+===========================================
+
+- URL에 민감한 정보가 노출되지 않도록 자동으로 파라미터 제거
+- 페이지 새로고침 없이 URL 변경으로 사용자 경험 향상
+- 다양한 저장소에서 직원번호를 찾아 안정성 확보
+- 상세한 로그로 디버깅 지원
+
+7. 지원하는 URL 파라미터 형식
+===================================
