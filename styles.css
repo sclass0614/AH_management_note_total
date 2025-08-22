@@ -53,6 +53,7 @@ body {
     margin: 0;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0; /* 메인 컨테이너가 줄어들지 않도록 설정 */
 }
 
 /* 헤더 영역 스타일 */
@@ -78,6 +79,8 @@ body {
     flex: 1;
     height: calc(100vh - 120px);
     min-width: 1200px; /* 최소 너비 설정 */
+    overflow-x: auto; /* 가로 스크롤 추가 */
+    flex-shrink: 0; /* 콘텐츠 영역이 줄어들지 않도록 설정 */
 }
 
 /* 좌측: 보고서 컨테이너 */
@@ -92,12 +95,15 @@ body {
     background-color: #f8f9fa;
     border-radius: 8px;
     overflow-y: auto;
+    overflow-x: auto; /* 가로 스크롤 추가 */
+    flex-shrink: 0; /* 보고서 컨테이너가 줄어들지 않도록 설정 */
 }
 
 /* A4용지 스타일 */
 .a4-paper {
     width: 210mm; /* 실제 A4용지 너비 */
     min-height: 297mm;
+    min-width: 210mm; /* 최소 너비 설정으로 창이 줄어들어도 A4 크기 유지 */
     background: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 16mm;
@@ -108,6 +114,7 @@ body {
     font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
     /* 인쇄 시와 동일한 여백을 위해 box-sizing 설정 */
     box-sizing: border-box;
+    flex-shrink: 0; /* A4 용지가 줄어들지 않도록 설정 */
 }
 
 .report-header {
@@ -317,6 +324,7 @@ body {
     height: fit-content;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
+    flex-shrink: 0; /* 편집 패널이 줄어들지 않도록 설정 */
 }
 
 .edit-header {
@@ -490,16 +498,19 @@ body {
     
     .content-area {
         min-width: 1000px; /* 모바일에서도 최소 너비 유지 */
+        flex-shrink: 0; /* 콘텐츠 영역이 줄어들지 않도록 설정 */
     }
     
     .report-container {
         min-width: 500px; /* 모바일에서 최소 너비 조정 */
+        flex-shrink: 0; /* 보고서 컨테이너가 줄어들지 않도록 설정 */
     }
     
     .edit-panel {
         min-width: 300px; /* 모바일에서 최소 너비 조정 */
         max-width: 350px;
         padding: 1rem;
+        flex-shrink: 0; /* 편집 패널이 줄어들지 않도록 설정 */
     }
     
     /* 모바일에서 form-row를 세로로 배치 */
@@ -518,6 +529,8 @@ body {
     .a4-paper {
         padding: 10mm;
         font-size: 1rem;
+        min-width: 210mm; /* 모바일에서도 A4 크기 유지 */
+        width: 210mm; /* 모바일에서도 A4 크기 유지 */
     }
     
     .edit-header {
@@ -883,6 +896,7 @@ body {
         width: 100% !important;
         min-height: auto !important;
         max-height: none !important;
+        min-width: auto !important; /* 출력 시에는 최소 너비 제한 해제 */
         box-shadow: none !important;
         padding: 25mm !important;
         margin: 0 !important;
@@ -903,6 +917,8 @@ body {
         break-inside: auto !important;
         /* 높이 제한 완전 해제 */
         contain: none !important;
+        /* 출력 시에는 flex-shrink 제한 해제 */
+        flex-shrink: 1 !important;
     }
     
     /* div로 변경된 텍스트 영역 - 자연스러운 페이지 분할 */
@@ -918,9 +934,9 @@ body {
         border-radius: 4px !important;
         box-sizing: border-box !important;
         
-        /* div 요소 기본 설정 - 높이 제한 완전 해제 */
+        /* div 요소 기본 설정 - 최소 높이 유지 */
         display: block !important;
-        min-height: auto !important;
+        min-height: 80px !important;
         height: auto !important;
         max-height: none !important;
         overflow: visible !important;
@@ -1036,13 +1052,13 @@ body {
         font-size: 1.2rem !important;
     }
     
-         .report-table th,
-     .report-table td {
-         border: 1px solid #000 !important;
-         background-color: white !important;
+    .report-table th,
+    .report-table td {
+        border: 1px solid #000 !important;
+        background-color: white !important;
          padding: 6px 8px !important;
-         text-align: left !important;
-         vertical-align: top !important;
+        text-align: left !important;
+        vertical-align: top !important;
          font-size: 1.2rem !important;
      }
      
@@ -1052,7 +1068,7 @@ body {
          word-wrap: break-word !important;
          word-break: break-word !important;
          vertical-align: top !important;
-     }
+    }
     
     .report-table th {
         background-color: #f0f0f0 !important;
